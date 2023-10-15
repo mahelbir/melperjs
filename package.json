@@ -1,0 +1,30 @@
+{
+  "name": "melperjs",
+  "version": "1.0.0",
+  "description": "Nodejs module to use predefined common functions and utilities",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node test/script.js"
+  },
+  "keywords": [
+    "helper",
+    "mixins",
+    "lodash",
+    "common functions",
+    "javascript helper"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mahelbir/melperjs.git"
+  },
+  "author": "Mahmuthan Elbir",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.1",
+    "bcrypt": "^5.1.1",
+    "hpagent": "^1.2.0",
+    "lodash": "^4.17.21",
+    "set-cookie-parser": "^2.6.0",
+    "xss": "^1.0.14"
+  }
+}
