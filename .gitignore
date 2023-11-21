@@ -64,4 +64,3 @@ package-lock.json
 .idea/
 src/storage/*
 test/test
-lib/

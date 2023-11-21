@@ -1,6 +1,6 @@
 {
   "name": "melperjs",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Nodejs module to use predefined common functions and utilities",
   "keywords": [
     "helper",
