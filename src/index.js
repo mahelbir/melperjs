@@ -1,13 +1,14 @@
-import  * as _ from "lodash";
+import * as _ from "lodash";
 import xss from "xss";
 import bcrypt from "bcrypt";
 import setCookieParser from "set-cookie-parser";
 
-export function Exception(message, response = {}) {
+export function Exception(message, response = {}, name = null) {
     response.status = response.status || 400;
     return {
-        message: message,
-        response: response
+        name: pascalCase(name),
+        message,
+        response,
     }
 }
 
@@ -55,12 +56,34 @@ export function findKeyNode(key, node, pair = null) {
     return null;
 }
 
-export function isEmpty(value) {
+export function checkEmpty(value) {
     if (typeof value === "number") {
         return value === 0;
     } else {
         return _.isEmpty(value);
     }
+}
+
+export function pascalCase(str){
+    return upperCaseFirst(_.camelCase(str));
+}
+
+export function upperCaseFirst(str) {
+    str = str || "";
+    return _.upperCase(str[0]) + str.slice(1);
+}
+
+export function lowerCaseFirst(str) {
+    str = str || "";
+    return _.lowerCase(str[0]) + str.slice(1);
+}
+
+export function titleString(str) {
+    str = str || "";
+    return str
+        .split(' ')
+        .map(word => _.capitalize(word))
+        .join(' ');
 }
 
 export function limitString(str, limit = 35) {
@@ -72,8 +95,9 @@ export function limitString(str, limit = 35) {
     }
 }
 
-export function safeString(source) {
-    return xss(source, {
+export function safeString(str) {
+    str = str || "";
+    return xss(str, {
         whiteList: {},
         stripIgnoreTag: true,
         stripIgnoreTagBody: ["script"]

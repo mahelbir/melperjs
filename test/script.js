@@ -4,7 +4,7 @@ import axios from "axios"
 
 
 (async () => {
-    console.log(helper.Exception("something went wrong"));
+    console.log(helper.Exception("something went wrong", {status: 500}, "axios error"));
     console.log(helper.time());
     await helper.sleepMs(1000);
     console.log(helper.time());
@@ -26,8 +26,12 @@ import axios from "axios"
             }
         }
     }));
-    console.log("1 empty", helper.isEmpty(1));
-    console.log("[] empty", helper.isEmpty([]));
+    console.log("str empty", helper.checkEmpty(""));
+    console.log("1 empty", helper.checkEmpty(1));
+    console.log("[] empty", helper.checkEmpty([]));
+    console.log(helper.upperCaseFirst("first letter upper"));
+    console.log(helper.lowerCaseFirst("First Letter Lower"));
+    console.log(helper.titleString("THIS mUsT be Title"));
     console.log(helper.limitString("LONG TEXT", 7));
     console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
     console.log(helper.randomString(32, true, true));

@@ -21,7 +21,7 @@ const nodeHelper = require("melperjs/node");
 const axios = require("axios");
 
 (async () => {
-    console.log(helper.Exception("something went wrong"));
+    console.log(helper.Exception("something went wrong", {status: 500}, "axios error"));
     console.log(helper.time());
     await helper.sleepMs(1000);
     console.log(helper.time());
@@ -43,8 +43,12 @@ const axios = require("axios");
             }
         }
     }));
-    console.log("1 empty", helper.isEmpty(1));
-    console.log("[] empty", helper.isEmpty([]));
+    console.log("str empty", helper.checkEmpty(""));
+    console.log("1 empty", helper.checkEmpty(1));
+    console.log("[] empty", helper.checkEmpty([]));
+    console.log(helper.upperCaseFirst("first letter upper"));
+    console.log(helper.lowerCaseFirst("First Letter Lower"));
+    console.log(helper.titleString("THIS mUsT be Title"));
     console.log(helper.limitString("LONG TEXT", 7));
     console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
     console.log(helper.randomString(32, true, true));
@@ -75,33 +79,41 @@ const axios = require("axios");
 })();
 
 /*
-{ message: 'something went wrong', response: { status: 400 } }
-1700522762
-1700522763
-1700522764
+{
+  name: 'AxiosError',
+  message: 'something went wrong',
+  response: { status: 500 }
+}
+1700529489
+1700529490
+1700529491
 Promise timed out after 1000ms
 { x: 1, y: 2, c: { d: true } }
+str empty true
 1 empty false
 [] empty true
+First letter upper
+first Letter Lower
+This Must Be Title
 LONG...
 SAFE TEXT
-i9ULmdbboTDL7NPgJRiY1i6O1x0D71wG
-91d59653
-50fe22be-a4e9-46cd-b73b-da5669ca43b4
+15WY89Q4yAMCzPmNsU0ANGX2eiOz7Gfy
+9eb93429
+7e1fb299-251c-4a75-bb37-f7cc3a730121
 strongProbability
-kpG7GBnGf8kK2JGwSNe8EaIdkrKl5OEr
-4f592b6e
-e7947cc3-d975-446c-82ec-fc77d84a67bb
+STIhrofUYVAQ4anplyJW2T7GEwSJkuk7
+6db791a1
+0cbef42d-a277-4f66-8bcc-e4de337c2b56
 strongProbability
 8d777f385d3dfec8815d20f7496026dc
-$2b$10$m3gbDZMz6P/NKtOBtcJPTe5Dt9TtGaFVE5M.F07QR4bLHoKuezfpm
+$2b$10$IsuTscKKHbcf6sBp7BrCOOcg6A8v32G9UxzdYN3Y6xyMaUynweYX2
 passwordHash true
 {
-  '1P_JAR': '2023-11-20-23',
-  AEC: 'Ackid1QUUwFH8ZlfrHR1RFoG3nbxsOvmYckU_mnIw4Z6cE4ue9_mbng2mmU',
-  NID: '511=m55MFOJ7XlxlkanJtm0q7eK5PkaePFQiaxEeMcAR_ojuPBWZ0bqw6tbDq4VGuT2CrTNgGWw_lLECx100Qlm1bRBNYEx_0wWtVNCh582q9-zhvQFSDbAI3vDtl-vMlMbpv_6JYJ7YBhGf1S6zbqv6Q84hlbLBOIg8Dt633-b5b94'
+  '1P_JAR': '2023-11-21-01',
+  AEC: 'Ackid1TlDwA2YJw3rzP5t3x5vBdxZt-4AzkhdwLahUVpj3vhdVHvPlw0VWM',
+  NID: '511=tD21gyuziCvCgZSQZd5h_xDFOF6df8AhkFy0iXq9MwHG9K8J3FEkT7L0CACgjJhGDVQFoZG_Pwi2Wo8Kf7NnmvcNGVmk-lDhY768PI9sVSUmSHIYwpfsuVvG4NwNwk3iPNKmbqaC_H-YVGZhEJVn2c6YYUVxE0oEDtfuyPhGOXw'
 }
-1P_JAR=2023-11-20-23;AEC=Ackid1QUUwFH8ZlfrHR1RFoG3nbxsOvmYckU_mnIw4Z6cE4ue9_mbng2mmU;NID=511=m55MFOJ7XlxlkanJtm0q7eK5PkaePFQiaxEeMcAR_ojuPBWZ0bqw6tbDq4VGuT2CrTNgGWw_lLECx100Qlm1bRBNYEx_0wWtVNCh582q9-zhvQFSDbAI3vDtl-vMlMbpv_6JYJ7YBhGf1S6zbqv6Q84hlbLBOIg8Dt633-b5b94
+1P_JAR=2023-11-21-01;AEC=Ackid1TlDwA2YJw3rzP5t3x5vBdxZt-4AzkhdwLahUVpj3vhdVHvPlw0VWM;NID=511=tD21gyuziCvCgZSQZd5h_xDFOF6df8AhkFy0iXq9MwHG9K8J3FEkT7L0CACgjJhGDVQFoZG_Pwi2Wo8Kf7NnmvcNGVmk-lDhY768PI9sVSUmSHIYwpfsuVvG4NwNwk3iPNKmbqaC_H-YVGZhEJVn2c6YYUVxE0oEDtfuyPhGOXw
 http://id:pw-{SESSION}@127.0.0.1:8080
 {
   protocol: 'http',
@@ -109,7 +121,7 @@ http://id:pw-{SESSION}@127.0.0.1:8080
   port: 8080,
   auth: { username: 'id', password: 'pw-{SESSION}' }
 }
-http://id:pw-06cbcd75@127.0.0.1:8080
+http://id:pw-527ef984@127.0.0.1:8080
 127.0.0.1
 HTTP CODE: 401 FOREIGN false
 HTTP CODE: 407 FOREIGN (Failed Proxy Auth) true
