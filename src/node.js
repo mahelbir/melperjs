@@ -4,16 +4,17 @@ import crypto from "crypto";
 import {networkInterfaces} from "os";
 import {execSync} from "child_process";
 
+import bcrypt from "bcrypt";
 import axios from "axios";
 import {HttpsProxyAgent} from "hpagent";
 
-import {randomWeighted, sleep} from "./index.js";
+import {CONSTANTS, randomWeighted, sleep} from "./index.js";
 
 
 export function tokenString(length, useNumbers = true, useUppercase = false) {
-    const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
-    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
+    const lowercaseChars = CONSTANTS.LOWER_CASE;
+    const uppercaseChars = CONSTANTS.UPPER_CASE;
+    const numbers = CONSTANTS.NUMBERS;
 
     let characters = lowercaseChars;
     if (useUppercase) characters += uppercaseChars;
@@ -75,19 +76,11 @@ export function getVersion() {
     }
 }
 
-export function createDir(directory) {
-    if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, {recursive: true});
-        return true;
-    }
-    return false;
-}
-
 export function createNumDir(mainDirectory) {
-    createDir(mainDirectory);
+    fs.mkdirSync(mainDirectory, {recursive: true});
     for (let i = 0; i <= 9; i++) {
         try {
-            createDir(path.join(mainDirectory, i.toString()));
+            fs.mkdirSync(path.join(mainDirectory, i.toString()));
         } catch (e) {
             console.error(`createNumDir:${i}`, e.message);
         }
@@ -96,6 +89,14 @@ export function createNumDir(mainDirectory) {
 
 export function md5(data) {
     return crypto.createHash('md5').update(data).digest("hex");
+}
+
+export function hashBcrypt(plainText) {
+    return bcrypt.hashSync(plainText, bcrypt.genSaltSync(10));
+}
+
+export function verifyBcrypt(plainText, hash) {
+    return bcrypt.compareSync(plainText, hash);
 }
 
 export function formatProxy(proxy, protocol = "http") {

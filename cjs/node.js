@@ -3,10 +3,10 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.createDir = createDir;
 exports.createNumDir = createNumDir;
 exports.formatProxy = formatProxy;
 exports.getVersion = getVersion;
+exports.hashBcrypt = hashBcrypt;
 exports.md5 = md5;
 exports.proxify = proxify;
 exports.proxyObject = proxyObject;
@@ -15,19 +15,21 @@ exports.tokenHex = tokenHex;
 exports.tokenString = tokenString;
 exports.tokenUuid = tokenUuid;
 exports.tokenWeighted = tokenWeighted;
+exports.verifyBcrypt = verifyBcrypt;
 var _fs = _interopRequireDefault(require("fs"));
 var _path = _interopRequireDefault(require("path"));
 var _crypto = _interopRequireDefault(require("crypto"));
 var _os = require("os");
 var _child_process = require("child_process");
+var _bcrypt = _interopRequireDefault(require("bcrypt"));
 var _axios = _interopRequireDefault(require("axios"));
 var _hpagent = require("hpagent");
 var _index = require("./index.js");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function tokenString(length, useNumbers = true, useUppercase = false) {
-  const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
-  const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const numbers = '0123456789';
+  const lowercaseChars = _index.CONSTANTS.LOWER_CASE;
+  const uppercaseChars = _index.CONSTANTS.UPPER_CASE;
+  const numbers = _index.CONSTANTS.NUMBERS;
   let characters = lowercaseChars;
   if (useUppercase) characters += uppercaseChars;
   if (useNumbers) characters += numbers;
@@ -76,20 +78,13 @@ function getVersion() {
     return 1.0;
   }
 }
-function createDir(directory) {
-  if (!_fs.default.existsSync(directory)) {
-    _fs.default.mkdirSync(directory, {
-      recursive: true
-    });
-    return true;
-  }
-  return false;
-}
 function createNumDir(mainDirectory) {
-  createDir(mainDirectory);
+  _fs.default.mkdirSync(mainDirectory, {
+    recursive: true
+  });
   for (let i = 0; i <= 9; i++) {
     try {
-      createDir(_path.default.join(mainDirectory, i.toString()));
+      _fs.default.mkdirSync(_path.default.join(mainDirectory, i.toString()));
     } catch (e) {
       console.error(`createNumDir:${i}`, e.message);
     }
@@ -97,6 +92,12 @@ function createNumDir(mainDirectory) {
 }
 function md5(data) {
   return _crypto.default.createHash('md5').update(data).digest("hex");
+}
+function hashBcrypt(plainText) {
+  return _bcrypt.default.hashSync(plainText, _bcrypt.default.genSaltSync(10));
+}
+function verifyBcrypt(plainText, hash) {
+  return _bcrypt.default.compareSync(plainText, hash);
 }
 function formatProxy(proxy, protocol = "http") {
   proxy = proxy.trim();
@@ -191,3 +192,4 @@ async function proxify(proxyConfig, callback = formatProxy) {
   }
   return null;
 }
+//# sourceMappingURL=node.js.map

@@ -1,7 +1,16 @@
-import * as _ from "lodash";
 import xss from "xss";
-import bcrypt from "bcrypt";
+import camelCase from "lodash/camelCase.js";
+import capitalize from "lodash/capitalize.js";
+import isEmpty from "lodash/isEmpty.js";
 import setCookieParser from "set-cookie-parser";
+
+
+export const CONSTANTS = {
+    LOWER_CASE: "abcdefghijklmnopqrstuvwxyz",
+    UPPER_CASE: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    HEXADECIMAL: "0123456789abcdef",
+    NUMBERS: "0123456789",
+};
 
 export function Exception(message, response = {}, name = null) {
     response.status = response.status || 400;
@@ -42,6 +51,10 @@ export function promiseTimeout(milliseconds, promise) {
     });
 }
 
+export function splitLines(text) {
+    return text.split(/\r?\n/).map(item => item.trim()).filter(item => !isEmpty(item));
+}
+
 export function findKeyNode(key, node, pair = null) {
     if (node && node.hasOwnProperty(key) && (pair ? node[key] === pair : true)) {
         return node;
@@ -60,29 +73,29 @@ export function checkEmpty(value) {
     if (typeof value === "number") {
         return value === 0;
     } else {
-        return _.isEmpty(value);
+        return isEmpty(value);
     }
 }
 
-export function pascalCase(str){
-    return upperCaseFirst(_.camelCase(str));
+export function pascalCase(str) {
+    return upperCaseFirst(camelCase(str));
 }
 
 export function upperCaseFirst(str) {
     str = str || "";
-    return _.upperCase(str[0]) + str.slice(1);
+    return str[0].toUpperCase() + str.slice(1);
 }
 
 export function lowerCaseFirst(str) {
     str = str || "";
-    return _.lowerCase(str[0]) + str.slice(1);
+    return str[0].toLowerCase() + str.slice(1);
 }
 
 export function titleString(str) {
     str = str || "";
     return str
         .split(' ')
-        .map(word => _.capitalize(word))
+        .map(word => capitalize(word))
         .join(' ');
 }
 
@@ -105,13 +118,10 @@ export function safeString(str) {
 }
 
 export function randomString(length, useNumbers = true, useUppercase = false) {
-    const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
-    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
 
-    let characters = lowercaseChars;
-    if (useUppercase) characters += uppercaseChars;
-    if (useNumbers) characters += numbers;
+    let characters = CONSTANTS.LOWER_CASE;
+    if (useUppercase) characters += CONSTANTS.UPPER_CASE;
+    if (useNumbers) characters += CONSTANTS.NUMBERS;
 
     let randomString = '';
     for (let i = 0; i < length; i++) {
@@ -124,11 +134,9 @@ export function randomString(length, useNumbers = true, useUppercase = false) {
 
 export function randomHex(length) {
     let result = '';
-    const characters = '0123456789abcdef';
-
     for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters[randomIndex];
+        const randomIndex = Math.floor(Math.random() * CONSTANTS.HEXADECIMAL.length);
+        result += CONSTANTS.HEXADECIMAL[randomIndex];
     }
 
     return result;
@@ -161,14 +169,6 @@ export function randomWeighted(dict, randomFunc = (totalWeight) => Math.random()
     }
 }
 
-export function hashBcrypt(plainText) {
-    return bcrypt.hashSync(plainText, bcrypt.genSaltSync(10));
-}
-
-export function verifyBcrypt(plainText, hash) {
-    return bcrypt.compareSync(plainText, hash);
-}
-
 export function cookieDict(res, decodeValues = false) {
     let dict = {};
     const cookies = setCookieParser.parse(res, {decodeValues: decodeValues});
@@ -184,7 +184,7 @@ export function cookieHeader(cookieDict) {
         .join(';')
 }
 
-export function foreignHttpError(httpCode) {
+export function isIntlHttpCode(httpCode) {
     return (
         httpCode === undefined ||
         httpCode === null ||
@@ -194,4 +194,14 @@ export function foreignHttpError(httpCode) {
         httpCode === 466 ||
         500 <= httpCode
     );
+}
+
+export function isIntlError(e) {
+    return (
+        e?.message?.toLowerCase?.()?.includes?.("timeout") ||
+        e?.message?.toLowerCase?.()?.includes?.("aborted") ||
+        e?.message?.toLowerCase?.()?.includes?.("tls connection") ||
+        e?.message?.toLowerCase?.()?.includes?.("socket hang") ||
+        isIntlHttpCode(e?.response?.status)
+    )
 }

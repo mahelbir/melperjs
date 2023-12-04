@@ -1,13 +1,13 @@
 {
   "name": "melperjs",
-  "version": "3.0.0",
-  "description": "Nodejs module to use predefined common functions and utilities",
+  "version": "5.0.0",
+  "description": "Javascript module to use predefined common functions and utilities",
   "keywords": [
     "helper",
     "mixins",
-    "lodash",
     "common functions",
-    "javascript helper"
+    "javascript helper",
+    "nodejs helper"
   ],
   "repository": {
     "type": "git",
@@ -15,12 +15,22 @@
   },
   "author": "Mahmuthan Elbir",
   "license": "MIT",
+  "type": "module",
   "exports": {
-    ".": "./lib/index.js",
-    "./node": "./lib/node.js"
+    ".": {
+      "import": "./mjs/index.js",
+      "require": "./cjs/index.js"
+    },
+    "./node": {
+      "import": "./mjs/node.js",
+      "require": "./cjs/node.js"
+    }
   },
   "scripts": {
-    "build": "babel src --out-dir lib",
+    "build-node": "babel ./src --out-dir ./cjs",
+    "build-module": "cross-env BABEL_ENV=module babel ./src --out-dir ./mjs",
+    "build-browser": "cross-env BABEL_ENV=browser babel ./src --out-dir ./lib",
+    "build": "npm run build-node && npm run build-module && npm run build-browser",
     "test": "node test/script.js"
   },
   "dependencies": {
@@ -35,9 +45,7 @@
     "@babel/cli": "^7.23.4",
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
-    "babel-loader": "^9.1.3",
-    "terser-webpack-plugin": "^5.3.9",
-    "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "babel-preset-env": "^1.7.0",
+    "cross-env": "^7.0.3"
   }
 }

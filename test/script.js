@@ -1,10 +1,11 @@
-import * as helper from "../src/index.js"
-import * as nodeHelper from "../src/node.js"
 import axios from "axios"
+import * as helper from "../src/index.js";
+import * as nodeHelper from "../src/node.js";
 
 
 (async () => {
-    console.log(helper.Exception("something went wrong", {status: 500}, "axios error"));
+    console.log(helper.CONSTANTS);
+    console.log(helper.Exception("something went wrong", {status: 400}, "bad request error"));
     console.log(helper.time());
     await helper.sleepMs(1000);
     console.log(helper.time());
@@ -14,7 +15,13 @@ import axios from "axios"
         await helper.promiseTimeout(1000, helper.sleepMs(2000));
     } catch (e) {
         console.error(e.message);
+        console.log("Timeout, Internal Error ?", helper.isIntlError(e));
     }
+    console.log(helper.splitLines(`
+    2.satır
+    
+    4.satır
+    `))
     console.log(helper.findKeyNode("c", {
         a: {
             b: {
@@ -26,9 +33,11 @@ import axios from "axios"
             }
         }
     }));
-    console.log("str empty", helper.checkEmpty(""));
-    console.log("1 empty", helper.checkEmpty(1));
-    console.log("[] empty", helper.checkEmpty([]));
+    console.log("'' empty ?", helper.checkEmpty(''));
+    console.log("1 empty ?", helper.checkEmpty(1));
+    console.log("0 empty ?", helper.checkEmpty(1));
+    console.log("[] empty ?", helper.checkEmpty([]));
+    console.log(helper.pascalCase("pascal case"));
     console.log(helper.upperCaseFirst("first letter upper"));
     console.log(helper.lowerCaseFirst("First Letter Lower"));
     console.log(helper.titleString("THIS mUsT be Title"));
@@ -43,9 +52,9 @@ import axios from "axios"
     console.log(nodeHelper.tokenUuid(true));
     console.log(nodeHelper.tokenWeighted({strongProbability: 1000, lowProbability: 1}));
     console.log(nodeHelper.md5("data"));
-    const password = helper.hashBcrypt("plain");
+    const password = nodeHelper.hashBcrypt("plain");
     console.log(password)
-    console.log("passwordHash", helper.verifyBcrypt("plain", password));
+    console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password));
     const cookies = helper.cookieDict(await axios.get("https://google.com"));
     console.log(cookies);
     console.log(helper.cookieHeader(cookies));
@@ -54,9 +63,8 @@ import axios from "axios"
     console.log(nodeHelper.proxyObject(proxy));
     console.log(await nodeHelper.proxify({mode: 4, proxy}));
     console.log(nodeHelper.serverIp());
-    console.log("HTTP CODE: 401 FOREIGN", helper.foreignHttpError(401));
-    console.log("HTTP CODE: 407 FOREIGN (Failed Proxy Auth)", helper.foreignHttpError(407));
+    console.log("HTTP CODE: 400 (Bad Request) ?", helper.isIntlHttpCode(401));
+    console.log("HTTP CODE: 407 (Failed Proxy Auth) ?", helper.isIntlHttpCode(407));
     nodeHelper.createNumDir("test");
-    nodeHelper.createDir("test");
     console.log("VERSIONED BY .GIT",  "v" + nodeHelper.getVersion());
 })();
