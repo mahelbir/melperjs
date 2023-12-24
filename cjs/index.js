@@ -98,10 +98,12 @@ function pascalCase(str) {
 }
 function upperCaseFirst(str) {
   str = str || "";
+  if (str.length < 1) return "";
   return str[0].toUpperCase() + str.slice(1);
 }
 function lowerCaseFirst(str) {
   str = str || "";
+  if (str.length < 1) return "";
   return str[0].toLowerCase() + str.slice(1);
 }
 function titleCase(str) {
