@@ -1,8 +1,8 @@
 import xss from "xss";
+import setCookieParser from "set-cookie-parser";
 import camelCase from "lodash/camelCase.js";
 import capitalize from "lodash/capitalize.js";
 import isEmpty from "lodash/isEmpty.js";
-import setCookieParser from "set-cookie-parser";
 
 
 export const CONSTANTS = {
@@ -17,8 +17,8 @@ export function Exception(message, response = {}, name = null) {
     return {
         name: pascalCase(name),
         message,
-        response,
-    }
+        response
+    };
 }
 
 export function time() {
@@ -91,7 +91,7 @@ export function lowerCaseFirst(str) {
     return str[0].toLowerCase() + str.slice(1);
 }
 
-export function titleString(str) {
+export function titleCase(str) {
     str = str || "";
     return str
         .split(' ')
@@ -142,6 +142,36 @@ export function randomHex(length) {
     return result;
 }
 
+export function randomInteger(min, max, callback) {
+    const minNotSpecified = typeof max === 'undefined' || typeof max === 'function';
+
+    if (minNotSpecified) {
+        callback = max;
+        max = min;
+        min = 0;
+    }
+
+    const isSync = typeof callback === 'undefined';
+
+    if (typeof min !== 'number' || typeof max !== 'number') {
+        throw new Error('min and max must be numerical values');
+    }
+    if (max <= min) {
+        throw new Error('max must be greater than min');
+    }
+
+    const randomNumber = Math.floor(Math.random() * (max - min)) + min;
+
+    if (isSync) {
+        return randomNumber;
+    } else {
+        if (typeof callback !== 'function') {
+            throw new Error('callback must be a function');
+        }
+        callback(randomNumber);
+    }
+}
+
 export function randomUuid(useDashes = true) {
     let d = Date.now();
     const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -189,9 +219,10 @@ export function isIntlHttpCode(httpCode) {
         httpCode === undefined ||
         httpCode === null ||
         httpCode === 0 ||
+        httpCode === 100 ||
         httpCode === 402 ||
         httpCode === 407 ||
-        httpCode === 466 ||
+        (460 <= httpCode && httpCode < 470) ||
         500 <= httpCode
     );
 }

@@ -5,10 +5,8 @@ import {networkInterfaces} from "os";
 import {execSync} from "child_process";
 
 import bcrypt from "bcrypt";
-import axios from "axios";
-import {HttpsProxyAgent} from "hpagent";
 
-import {CONSTANTS, randomWeighted, sleep} from "./index.js";
+import {CONSTANTS, randomWeighted, splitLines} from "./index.js";
 
 
 export function tokenString(length, useNumbers = true, useUppercase = false) {
@@ -144,50 +142,14 @@ export function proxyObject(...args) {
     return proxy;
 }
 
-export async function proxify(proxyConfig, callback = formatProxy) {
-    proxyConfig = proxyConfig || {};
-    const timeout = 7000;
-    if (proxyConfig.mode === 1) {
-        return callback(proxyConfig.proxy);
-    } else if (proxyConfig.mode === 2) {
-        const proxy = callback(proxyConfig.proxy);
-        try {
-            await axios.get(proxyConfig.resetApi, {timeout});
-        } catch {
-            return false;
-        }
-        await sleep(5);
-        for (let i = 0; i < 5; i++) {
-            try {
-                const res = await axios.get("https://api64.ipify.org", {
-                    timeout,
-                    httpsAgent: new HttpsProxyAgent({proxy, timeout: 7000})
-                });
-                if (res.status === 200)
-                    return proxy;
-            } catch {
-                await sleep(3);
-            }
-        }
-    } else if (proxyConfig.mode === 3) {
-        try {
-            const res = await axios.get(proxyConfig.resetApi, {timeout});
-            if (res.status === 200)
-                return callback(proxyConfig.proxy);
-        } catch {
-            return false;
-        }
-    } else if (proxyConfig.mode === 4) {
-        return callback(proxyConfig.proxy).replace("{SESSION}", tokenHex(8));
-    } else if (proxyConfig.mode === 5) {
-        try {
-            const lines = proxyConfig.proxy.split("\n");
-            const line = lines[crypto.randomInt(0, lines.length)];
-            return callback(line);
-        } catch {
-            return false;
-        }
-    }
-
-    return null;
+export function proxyValue(proxies) {
+    let proxy;
+    proxies = proxies || "";
+    proxies = splitLines(proxies);
+    if (proxies.length < 1)
+        return null;
+    proxy = proxies[crypto.randomInt(0, proxies.length)];
+    proxy = formatProxy(proxy);
+    proxy = proxy.replace("{SESSION}", tokenHex(8));
+    return proxy || null;
 }

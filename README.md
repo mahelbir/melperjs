@@ -57,11 +57,12 @@ const axios = require("axios");
     console.log(helper.pascalCase("pascal case"));
     console.log(helper.upperCaseFirst("first letter upper"));
     console.log(helper.lowerCaseFirst("First Letter Lower"));
-    console.log(helper.titleString("THIS mUsT be Title"));
+    console.log(helper.titleCase("THIS mUsT be Title"));
     console.log(helper.limitString("LONG TEXT", 7));
     console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
     console.log(helper.randomString(32, true, true));
     console.log(helper.randomHex(8));
+    console.log(helper.randomInteger(100, 1000));
     console.log(helper.randomUuid(true));
     console.log(helper.randomWeighted({strongProbability: 1000, lowProbability: 1}));
     console.log(nodeHelper.tokenString(32, true, true));
@@ -78,7 +79,7 @@ const axios = require("axios");
     const proxy = nodeHelper.formatProxy("127.0.0.1:8080:id:pw-{SESSION}");
     console.log(proxy);
     console.log(nodeHelper.proxyObject(proxy));
-    console.log(await nodeHelper.proxify({mode: 4, proxy}));
+    console.log(nodeHelper.proxyValue(proxy));
     console.log(nodeHelper.serverIp());
     console.log("HTTP CODE: 400 (Bad Request) ?", helper.isIntlHttpCode(401));
     console.log("HTTP CODE: 407 (Failed Proxy Auth) ?", helper.isIntlHttpCode(407));
@@ -117,6 +118,7 @@ LONG...
 SAFE TEXT
 sP3jTNwe1rRrW1TVAPb4HAXNFjJB2mWb
 f70f7212
+376
 f07fe6b1-46d5-4f30-8138-f263f4916e65
 strongProbability
 JT4tXSI7YdIYDGbzLmHkItZ32vgi5aos
