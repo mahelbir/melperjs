@@ -8,8 +8,8 @@ exports.formatProxy = formatProxy;
 exports.getVersion = getVersion;
 exports.hashBcrypt = hashBcrypt;
 exports.md5 = md5;
-exports.proxify = proxify;
 exports.proxyObject = proxyObject;
+exports.proxyValue = proxyValue;
 exports.serverIp = serverIp;
 exports.tokenHex = tokenHex;
 exports.tokenString = tokenString;
@@ -22,8 +22,6 @@ var _crypto = _interopRequireDefault(require("crypto"));
 var _os = require("os");
 var _child_process = require("child_process");
 var _bcrypt = _interopRequireDefault(require("bcrypt"));
-var _axios = _interopRequireDefault(require("axios"));
-var _hpagent = require("hpagent");
 var _index = require("./index.js");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function tokenString(length, useNumbers = true, useUppercase = false) {
@@ -141,55 +139,14 @@ function proxyObject(...args) {
   }
   return proxy;
 }
-async function proxify(proxyConfig, callback = formatProxy) {
-  proxyConfig = proxyConfig || {};
-  const timeout = 7000;
-  if (proxyConfig.mode === 1) {
-    return callback(proxyConfig.proxy);
-  } else if (proxyConfig.mode === 2) {
-    const proxy = callback(proxyConfig.proxy);
-    try {
-      await _axios.default.get(proxyConfig.resetApi, {
-        timeout
-      });
-    } catch {
-      return false;
-    }
-    await (0, _index.sleep)(5);
-    for (let i = 0; i < 5; i++) {
-      try {
-        const res = await _axios.default.get("https://api64.ipify.org", {
-          timeout,
-          httpsAgent: new _hpagent.HttpsProxyAgent({
-            proxy,
-            timeout: 7000
-          })
-        });
-        if (res.status === 200) return proxy;
-      } catch {
-        await (0, _index.sleep)(3);
-      }
-    }
-  } else if (proxyConfig.mode === 3) {
-    try {
-      const res = await _axios.default.get(proxyConfig.resetApi, {
-        timeout
-      });
-      if (res.status === 200) return callback(proxyConfig.proxy);
-    } catch {
-      return false;
-    }
-  } else if (proxyConfig.mode === 4) {
-    return callback(proxyConfig.proxy).replace("{SESSION}", tokenHex(8));
-  } else if (proxyConfig.mode === 5) {
-    try {
-      const lines = proxyConfig.proxy.split("\n");
-      const line = lines[_crypto.default.randomInt(0, lines.length)];
-      return callback(line);
-    } catch {
-      return false;
-    }
-  }
-  return null;
+function proxyValue(proxies) {
+  let proxy;
+  proxies = proxies || "";
+  proxies = (0, _index.splitLines)(proxies);
+  if (proxies.length < 1) return null;
+  proxy = proxies[_crypto.default.randomInt(0, proxies.length)];
+  proxy = formatProxy(proxy);
+  proxy = proxy.replace("{SESSION}", tokenHex(8));
+  return proxy || null;
 }
 //# sourceMappingURL=node.js.map

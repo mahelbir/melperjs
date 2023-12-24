@@ -16,6 +16,7 @@ exports.lowerCaseFirst = lowerCaseFirst;
 exports.pascalCase = pascalCase;
 exports.promiseTimeout = promiseTimeout;
 exports.randomHex = randomHex;
+exports.randomInteger = randomInteger;
 exports.randomString = randomString;
 exports.randomUuid = randomUuid;
 exports.randomWeighted = randomWeighted;
@@ -24,13 +25,13 @@ exports.sleep = sleep;
 exports.sleepMs = sleepMs;
 exports.splitLines = splitLines;
 exports.time = time;
-exports.titleString = titleString;
+exports.titleCase = titleCase;
 exports.upperCaseFirst = upperCaseFirst;
 var _xss = _interopRequireDefault(require("xss"));
+var _setCookieParser = _interopRequireDefault(require("set-cookie-parser"));
 var _camelCase = _interopRequireDefault(require("lodash/camelCase.js"));
 var _capitalize = _interopRequireDefault(require("lodash/capitalize.js"));
 var _isEmpty = _interopRequireDefault(require("lodash/isEmpty.js"));
-var _setCookieParser = _interopRequireDefault(require("set-cookie-parser"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 const CONSTANTS = exports.CONSTANTS = {
   LOWER_CASE: "abcdefghijklmnopqrstuvwxyz",
@@ -70,7 +71,7 @@ function promiseTimeout(milliseconds, promise) {
   });
 }
 function splitLines(text) {
-  return text.split(/\r?\n/).filter(item => !checkEmpty(item)).map(item => item.trim());
+  return text.split(/\r?\n/).map(item => item.trim()).filter(item => !(0, _isEmpty.default)(item));
 }
 function findKeyNode(key, node, pair = null) {
   if (node && node.hasOwnProperty(key) && (pair ? node[key] === pair : true)) {
@@ -103,7 +104,7 @@ function lowerCaseFirst(str) {
   str = str || "";
   return str[0].toLowerCase() + str.slice(1);
 }
-function titleString(str) {
+function titleCase(str) {
   str = str || "";
   return str.split(' ').map(word => (0, _capitalize.default)(word)).join(' ');
 }
@@ -142,6 +143,30 @@ function randomHex(length) {
   }
   return result;
 }
+function randomInteger(min, max, callback) {
+  const minNotSpecified = typeof max === 'undefined' || typeof max === 'function';
+  if (minNotSpecified) {
+    callback = max;
+    max = min;
+    min = 0;
+  }
+  const isSync = typeof callback === 'undefined';
+  if (typeof min !== 'number' || typeof max !== 'number') {
+    throw new Error('min and max must be numerical values');
+  }
+  if (max <= min) {
+    throw new Error('max must be greater than min');
+  }
+  const randomNumber = Math.floor(Math.random() * (max - min)) + min;
+  if (isSync) {
+    return randomNumber;
+  } else {
+    if (typeof callback !== 'function') {
+      throw new Error('callback must be a function');
+    }
+    callback(randomNumber);
+  }
+}
 function randomUuid(useDashes = true) {
   let d = Date.now();
   const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -178,7 +203,7 @@ function cookieHeader(cookieDict) {
   return Object.entries(cookieDict).map(([key, value]) => `${key}=${value}`).join(';');
 }
 function isIntlHttpCode(httpCode) {
-  return httpCode === undefined || httpCode === null || httpCode === 0 || httpCode === 402 || httpCode === 407 || httpCode === 466 || 500 <= httpCode;
+  return httpCode === undefined || httpCode === null || httpCode === 0 || httpCode === 100 || httpCode === 402 || httpCode === 407 || 460 <= httpCode && httpCode < 470 || 500 <= httpCode;
 }
 function isIntlError(e) {
   return e?.message?.toLowerCase?.()?.includes?.("timeout") || e?.message?.toLowerCase?.()?.includes?.("aborted") || e?.message?.toLowerCase?.()?.includes?.("tls connection") || e?.message?.toLowerCase?.()?.includes?.("socket hang") || isIntlHttpCode(e?.response?.status);
