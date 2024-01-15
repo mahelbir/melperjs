@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { networkInterfaces } from "os";
 import { execSync } from "child_process";
 import bcrypt from "bcrypt";
-import { CONSTANTS, randomWeighted, splitLines } from "./index.js";
+import { CONSTANTS, randomWeighted, splitClear } from "./index.js";
 export function tokenString(length, useNumbers = true, useUppercase = false) {
   const lowercaseChars = CONSTANTS.LOWER_CASE;
   const uppercaseChars = CONSTANTS.UPPER_CASE;
@@ -72,11 +72,11 @@ export function createNumDir(mainDirectory) {
 export function md5(data) {
   return crypto.createHash('md5').update(data).digest("hex");
 }
-export function hashBcrypt(plainText) {
-  return bcrypt.hashSync(plainText, bcrypt.genSaltSync(10));
+export function hashBcrypt(plainText, encryptionKey = "") {
+  return bcrypt.hashSync(plainText + encryptionKey, bcrypt.genSaltSync(10));
 }
-export function verifyBcrypt(plainText, hash) {
-  return bcrypt.compareSync(plainText, hash);
+export function verifyBcrypt(plainText, hash, encryptionKey = "") {
+  return bcrypt.compareSync(plainText + encryptionKey, hash);
 }
 export function formatProxy(proxy, protocol = "http") {
   proxy = proxy.trim();
@@ -123,7 +123,7 @@ export function proxyObject(...args) {
 export function proxyValue(proxies) {
   let proxy;
   proxies = proxies || "";
-  proxies = splitLines(proxies);
+  proxies = splitClear(proxies);
   if (proxies.length < 1) return null;
   proxy = proxies[crypto.randomInt(0, proxies.length)];
   proxy = formatProxy(proxy);

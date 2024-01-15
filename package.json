@@ -1,13 +1,14 @@
 {
   "name": "melperjs",
-  "version": "6.2.0",
+  "version": "7.0.0",
   "description": "Javascript module to use predefined common functions and utilities",
   "keywords": [
     "helper",
     "mixins",
     "common functions",
     "javascript helper",
-    "nodejs helper"
+    "nodejs helper",
+    "lodash"
   ],
   "repository": {
     "type": "git",
@@ -27,14 +28,12 @@
     }
   },
   "scripts": {
-    "build-node": "babel ./src --out-dir ./cjs",
-    "build-module": "cross-env BABEL_ENV=module babel ./src --out-dir ./mjs",
-    "build-browser": "cross-env BABEL_ENV=browser babel ./src --out-dir ./lib",
-    "build": "npm run build-node && npm run build-module && npm run build-browser",
+    "build-cjs": "babel ./src --out-dir ./cjs",
+    "build-mjs": "cross-env BABEL_ENV=module babel ./src --out-dir ./mjs",
+    "build": "npm run build-cjs && npm run build-mjs",
     "test": "node test/script.js"
   },
   "dependencies": {
-    "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
     "hpagent": "^1.2.0",
     "lodash": "^4.17.21",
@@ -45,7 +44,7 @@
     "@babel/cli": "^7.23.4",
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
-    "babel-preset-env": "^1.7.0",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "axios": "^1.6.5"
   }
 }

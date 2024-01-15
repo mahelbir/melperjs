@@ -51,8 +51,8 @@ export function promiseTimeout(milliseconds, promise) {
     });
 }
 
-export function splitLines(text) {
-    return text.split(/\r?\n/).map(item => item.trim()).filter(item => !isEmpty(item));
+export function splitClear(rawText, separator = /\r?\n/) {
+    return rawText.split(separator).map(item => item.trim()).filter(item => !isEmpty(item));
 }
 
 export function findKeyNode(key, node, pair = null) {
@@ -77,10 +77,6 @@ export function checkEmpty(value) {
     }
 }
 
-export function pascalCase(str) {
-    return upperCaseFirst(camelCase(str));
-}
-
 export function upperCaseFirst(str) {
     str = str || "";
     if(str.length < 1)
@@ -95,6 +91,10 @@ export function lowerCaseFirst(str) {
     return str[0].toLowerCase() + str.slice(1);
 }
 
+export function pascalCase(str) {
+    return upperCaseFirst(camelCase(str));
+}
+
 export function titleCase(str) {
     str = str || "";
     return str
@@ -103,12 +103,12 @@ export function titleCase(str) {
         .join(' ');
 }
 
-export function limitString(str, limit = 35) {
+export function limitString(str, limit = 35, omission = "...") {
     str = str || "";
     if (str.length <= limit) {
         return str;
     } else {
-        return str.substring(0, limit - 3) + "...";
+        return str.substring(0, limit - omission.length) + omission;
     }
 }
 

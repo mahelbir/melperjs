@@ -17,7 +17,7 @@ import * as nodeHelper from "../src/node.js";
         console.error(e.message);
         console.log("Timeout, Internal Error ?", helper.isIntlError(e));
     }
-    console.log(helper.splitLines(`
+    console.log(helper.splitClear(`
     2.satır
     
     4.satır
@@ -53,9 +53,9 @@ import * as nodeHelper from "../src/node.js";
     console.log(nodeHelper.tokenUuid(true));
     console.log(nodeHelper.tokenWeighted({strongProbability: 1000, lowProbability: 1}));
     console.log(nodeHelper.md5("data"));
-    const password = nodeHelper.hashBcrypt("plain");
+    const password = nodeHelper.hashBcrypt("plain", "encryptionKey");
     console.log(password)
-    console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password));
+    console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password, "encryptionKey"));
     const cookies = helper.cookieDict(await axios.get("https://google.com"));
     console.log(cookies);
     console.log(helper.cookieHeader(cookies));

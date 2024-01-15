@@ -34,10 +34,10 @@ const axios = require("axios");
         console.error(e.message);
         console.log("Timeout, Internal Error ?", helper.isIntlError(e));
     }
-    console.log(helper.splitLines(`
-    2.satır
+    console.log(helper.splitClear(`
+    2.line
     
-    4.satır
+    4.line
     `))
     console.log(helper.findKeyNode("c", {
         a: {
@@ -70,9 +70,9 @@ const axios = require("axios");
     console.log(nodeHelper.tokenUuid(true));
     console.log(nodeHelper.tokenWeighted({strongProbability: 1000, lowProbability: 1}));
     console.log(nodeHelper.md5("data"));
-    const password = nodeHelper.hashBcrypt("plain");
+    const password = nodeHelper.hashBcrypt("plain", "encryptionKey");
     console.log(password)
-    console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password));
+    console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password, "encryptionKey"));
     const cookies = helper.cookieDict(await axios.get("https://google.com"));
     console.log(cookies);
     console.log(helper.cookieHeader(cookies));

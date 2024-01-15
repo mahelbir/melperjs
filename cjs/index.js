@@ -23,7 +23,7 @@ exports.randomWeighted = randomWeighted;
 exports.safeString = safeString;
 exports.sleep = sleep;
 exports.sleepMs = sleepMs;
-exports.splitLines = splitLines;
+exports.splitClear = splitClear;
 exports.time = time;
 exports.titleCase = titleCase;
 exports.upperCaseFirst = upperCaseFirst;
@@ -70,8 +70,8 @@ function promiseTimeout(milliseconds, promise) {
     });
   });
 }
-function splitLines(text) {
-  return text.split(/\r?\n/).map(item => item.trim()).filter(item => !(0, _isEmpty.default)(item));
+function splitClear(rawText, separator = /\r?\n/) {
+  return rawText.split(separator).map(item => item.trim()).filter(item => !(0, _isEmpty.default)(item));
 }
 function findKeyNode(key, node, pair = null) {
   if (node && node.hasOwnProperty(key) && (pair ? node[key] === pair : true)) {
@@ -93,9 +93,6 @@ function checkEmpty(value) {
     return (0, _isEmpty.default)(value);
   }
 }
-function pascalCase(str) {
-  return upperCaseFirst((0, _camelCase.default)(str));
-}
 function upperCaseFirst(str) {
   str = str || "";
   if (str.length < 1) return "";
@@ -106,16 +103,19 @@ function lowerCaseFirst(str) {
   if (str.length < 1) return "";
   return str[0].toLowerCase() + str.slice(1);
 }
+function pascalCase(str) {
+  return upperCaseFirst((0, _camelCase.default)(str));
+}
 function titleCase(str) {
   str = str || "";
   return str.split(' ').map(word => (0, _capitalize.default)(word)).join(' ');
 }
-function limitString(str, limit = 35) {
+function limitString(str, limit = 35, omission = "...") {
   str = str || "";
   if (str.length <= limit) {
     return str;
   } else {
-    return str.substring(0, limit - 3) + "...";
+    return str.substring(0, limit - omission.length) + omission;
   }
 }
 function safeString(str) {

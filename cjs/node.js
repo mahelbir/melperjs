@@ -91,11 +91,11 @@ function createNumDir(mainDirectory) {
 function md5(data) {
   return _crypto.default.createHash('md5').update(data).digest("hex");
 }
-function hashBcrypt(plainText) {
-  return _bcrypt.default.hashSync(plainText, _bcrypt.default.genSaltSync(10));
+function hashBcrypt(plainText, encryptionKey = "") {
+  return _bcrypt.default.hashSync(plainText + encryptionKey, _bcrypt.default.genSaltSync(10));
 }
-function verifyBcrypt(plainText, hash) {
-  return _bcrypt.default.compareSync(plainText, hash);
+function verifyBcrypt(plainText, hash, encryptionKey = "") {
+  return _bcrypt.default.compareSync(plainText + encryptionKey, hash);
 }
 function formatProxy(proxy, protocol = "http") {
   proxy = proxy.trim();
@@ -142,7 +142,7 @@ function proxyObject(...args) {
 function proxyValue(proxies) {
   let proxy;
   proxies = proxies || "";
-  proxies = (0, _index.splitLines)(proxies);
+  proxies = (0, _index.splitClear)(proxies);
   if (proxies.length < 1) return null;
   proxy = proxies[_crypto.default.randomInt(0, proxies.length)];
   proxy = formatProxy(proxy);
