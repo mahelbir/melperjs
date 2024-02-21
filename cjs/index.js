@@ -13,6 +13,7 @@ exports.isIntlError = isIntlError;
 exports.isIntlHttpCode = isIntlHttpCode;
 exports.limitString = limitString;
 exports.lowerCaseFirst = lowerCaseFirst;
+exports.objectStringify = objectStringify;
 exports.pascalCase = pascalCase;
 exports.promiseTimeout = promiseTimeout;
 exports.randomHex = randomHex;
@@ -109,6 +110,22 @@ function pascalCase(str) {
 function titleCase(str) {
   str = str || "";
   return str.split(' ').map(word => (0, _capitalize.default)(word)).join(' ');
+}
+function objectStringify(obj) {
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        objectStringify(obj[key]);
+      } else {
+        if (obj[key]?.toString) {
+          obj[key] = obj[key].toString();
+        } else {
+          obj[key] = String(obj[key]);
+        }
+      }
+    }
+  }
+  return obj;
 }
 function limitString(str, limit = 35, omission = "...") {
   str = str || "";

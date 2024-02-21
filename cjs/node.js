@@ -71,7 +71,7 @@ function getVersion() {
     const day = formatDatePart(date.getDate());
     const hour = formatDatePart(date.getHours());
     const minute = formatDatePart(date.getMinutes());
-    return parseFloat(`${year}${month}.${day}${hour}${minute}`);
+    return parseFloat(`${year}${month}${day}.${hour}${minute}`);
   } catch {
     return 1.0;
   }

@@ -58,6 +58,17 @@ const axios = require("axios");
     console.log(helper.upperCaseFirst("first letter upper"));
     console.log(helper.lowerCaseFirst("First Letter Lower"));
     console.log(helper.titleCase("THIS mUsT be Title"));
+    console.log(helper.objectStringify({
+        a: "hello",
+        b: 1,
+        c: undefined,
+        d: null,
+        e: {
+            ea: 2
+        },
+        f: [3,4,5],
+        g: false
+    }));
     console.log(helper.limitString("LONG TEXT", 7));
     console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
     console.log(helper.randomString(32, true, true));
@@ -114,6 +125,16 @@ PascalCase
 First letter upper
 first Letter Lower
 This Must Be Title
+{
+  a: 'hello',
+  b: '1',
+  c: 'undefined',
+  d: 'null',
+  e: { ea: '2' },
+  f: [ '3', '4', '5' ],
+  g: 'false'
+}
+
 LONG...
 SAFE TEXT
 sP3jTNwe1rRrW1TVAPb4HAXNFjJB2mWb

@@ -1,14 +1,16 @@
 {
   "name": "melperjs",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "Javascript module to use predefined common functions and utilities",
   "keywords": [
+    "melperjs",
+    "melper js",
+    "helper js",
     "helper",
     "mixins",
     "common functions",
     "javascript helper",
-    "nodejs helper",
-    "lodash"
+    "nodejs helper"
   ],
   "repository": {
     "type": "git",

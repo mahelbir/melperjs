@@ -79,14 +79,14 @@ export function checkEmpty(value) {
 
 export function upperCaseFirst(str) {
     str = str || "";
-    if(str.length < 1)
+    if (str.length < 1)
         return "";
     return str[0].toUpperCase() + str.slice(1);
 }
 
 export function lowerCaseFirst(str) {
     str = str || "";
-    if(str.length < 1)
+    if (str.length < 1)
         return "";
     return str[0].toLowerCase() + str.slice(1);
 }
@@ -101,6 +101,23 @@ export function titleCase(str) {
         .split(' ')
         .map(word => capitalize(word))
         .join(' ');
+}
+
+export function objectStringify(obj) {
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                 objectStringify(obj[key]);
+            } else {
+                if (obj[key]?.toString) {
+                    obj[key] = obj[key].toString();
+                } else {
+                    obj[key] = String(obj[key]);
+                }
+            }
+        }
+    }
+    return obj;
 }
 
 export function limitString(str, limit = 35, omission = "...") {

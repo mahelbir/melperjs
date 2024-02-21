@@ -80,6 +80,22 @@ export function titleCase(str) {
   str = str || "";
   return str.split(' ').map(word => capitalize(word)).join(' ');
 }
+export function objectStringify(obj) {
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        objectStringify(obj[key]);
+      } else {
+        if (obj[key]?.toString) {
+          obj[key] = obj[key].toString();
+        } else {
+          obj[key] = String(obj[key]);
+        }
+      }
+    }
+  }
+  return obj;
+}
 export function limitString(str, limit = 35, omission = "...") {
   str = str || "";
   if (str.length <= limit) {
