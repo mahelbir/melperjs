@@ -13,12 +13,16 @@ export const CONSTANTS = {
 };
 
 export function Exception(message, response = {}, name = null) {
-    response.status = response.status || 400;
-    return {
-        name: pascalCase(name),
-        message,
-        response
-    };
+    class ExceptionClass extends Error {
+        constructor(message, response, name) {
+            super(message);
+            response.status = response.status || 400;
+            this.response = response;
+            this.name = name ? pascalCase(name) : "Exception";
+        }
+    }
+
+    return new ExceptionClass(message, response, name);
 }
 
 export function time() {
@@ -107,7 +111,7 @@ export function objectStringify(obj) {
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
             if (typeof obj[key] === 'object' && obj[key] !== null) {
-                 objectStringify(obj[key]);
+                objectStringify(obj[key]);
             } else {
                 if (obj[key]?.toString) {
                     obj[key] = obj[key].toString();

@@ -41,12 +41,15 @@ const CONSTANTS = exports.CONSTANTS = {
   NUMBERS: "0123456789"
 };
 function Exception(message, response = {}, name = null) {
-  response.status = response.status || 400;
-  return {
-    name: pascalCase(name),
-    message,
-    response
-  };
+  class ExceptionClass extends Error {
+    constructor(message, response, name) {
+      super(message);
+      response.status = response.status || 400;
+      this.response = response;
+      this.name = name ? pascalCase(name) : "Exception";
+    }
+  }
+  return new ExceptionClass(message, response, name);
 }
 function time() {
   return Math.floor(Date.now() / 1000);
