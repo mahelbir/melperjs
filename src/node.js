@@ -4,7 +4,7 @@ import crypto from "crypto";
 import {networkInterfaces} from "os";
 import {execSync} from "child_process";
 
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 import {CONSTANTS, randomWeighted, splitClear} from "./index.js";
 

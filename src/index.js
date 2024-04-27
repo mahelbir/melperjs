@@ -1,7 +1,7 @@
 import xss from "xss";
 import setCookieParser from "set-cookie-parser";
 import camelCase from "lodash/camelCase.js";
-import capitalize from "lodash/capitalize.js";
+import upperFirst from "lodash/upperFirst.js";
 import isEmpty from "lodash/isEmpty.js";
 
 
@@ -23,6 +23,29 @@ export function Exception(message, response = {}, name = null) {
     }
 
     return new ExceptionClass(message, response, name);
+}
+
+export async function forever(cooldown, onSuccess, onError = null, onCompleted = null) {
+    const checkCooldown = (value) => value && !isNaN(value) && value > 0;
+    if (!checkCooldown(cooldown))
+        throw new Error("Cooldown must be a positive number");
+
+    while (true) {
+        try {
+            const value = await onSuccess();
+            if (checkCooldown(value))
+                cooldown = value;
+        } catch (e) {
+            const value = onError && await onError(e);
+            if (checkCooldown(value))
+                cooldown = value;
+        } finally {
+            const value = onCompleted && await onCompleted();
+            if (checkCooldown(value))
+                cooldown = value;
+            await sleepMs(cooldown);
+        }
+    }
 }
 
 export function time() {
@@ -55,7 +78,8 @@ export function promiseTimeout(milliseconds, promise) {
     });
 }
 
-export function splitClear(rawText, separator = /\r?\n/) {
+export function splitClear(rawText, separator = null) {
+    separator = separator ?? /\r?\n/;
     return rawText.split(separator).map(item => item.trim()).filter(item => !isEmpty(item));
 }
 
@@ -81,30 +105,13 @@ export function checkEmpty(value) {
     }
 }
 
-export function upperCaseFirst(str) {
-    str = str || "";
-    if (str.length < 1)
-        return "";
-    return str[0].toUpperCase() + str.slice(1);
-}
-
-export function lowerCaseFirst(str) {
-    str = str || "";
-    if (str.length < 1)
-        return "";
-    return str[0].toLowerCase() + str.slice(1);
-}
-
 export function pascalCase(str) {
-    return upperCaseFirst(camelCase(str));
+    return upperFirst(camelCase(str));
 }
 
 export function titleCase(str) {
     str = str || "";
-    return str
-        .split(' ')
-        .map(word => capitalize(word))
-        .join(' ');
+    return str.replace(/\b\w/g, char => char.toUpperCase());
 }
 
 export function objectStringify(obj) {
@@ -243,6 +250,7 @@ export function isIntlHttpCode(httpCode) {
     return (
         httpCode === undefined ||
         httpCode === null ||
+        isNaN(httpCode) ||
         httpCode === 0 ||
         httpCode === 100 ||
         httpCode === 402 ||

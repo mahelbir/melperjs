@@ -1,52 +1,29 @@
 {
+  "presets": [
+    ["@babel/preset-env", {
+      "modules": false
+    }]
+  ],
   "env": {
-    "development": {
+    "esm": {
       "presets": [
-        [
-          "@babel/preset-env",
-          {
-            "targets": {
-              "node": "18"
-            }
-          }
-        ]
-      ],
-      "plugins": [
+        ["@babel/preset-env", {
+          "targets": {
+            "esmodules": true
+          },
+          "modules": false
+        }]
       ]
     },
-    "module": {
+    "cjs": {
       "presets": [
-        [
-          "@babel/preset-env",
-          {
-            "targets": {
-              "node": "18"
-            },
-            "modules": false
-          }
-        ]
-      ],
-      "plugins": [
-      ]
-    },
-    "browser": {
-      "presets": [
-        [
-          "@babel/preset-env",
-          {
-            "targets": {
-              "browsers": "last 2 versions, ie 10-11"
-            },
-            "modules": false
-          }
-        ]
-      ],
-      "plugins": [
-      ],
-      "ignore": [
-        "./src/node.js"
+        ["@babel/preset-env", {
+          "targets": {
+            "node": "18"
+          },
+          "modules": "commonjs"
+        }]
       ]
     }
-  },
-  "sourceMaps": true
+  }
 }

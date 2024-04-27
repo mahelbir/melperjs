@@ -1,13 +1,13 @@
 {
   "name": "melperjs",
-  "version": "7.2.0",
+  "version": "8.0.0",
   "description": "Javascript module to use predefined common functions and utilities",
   "keywords": [
     "melperjs",
     "melper js",
     "helper js",
     "helper",
-    "mixins",
+    "utils",
     "common functions",
     "javascript helper",
     "nodejs helper"
@@ -19,34 +19,37 @@
   "author": "Mahmuthan Elbir",
   "license": "MIT",
   "type": "module",
+  "files": [
+    "lib/**/*"
+  ],
   "exports": {
     ".": {
-      "import": "./mjs/index.js",
-      "require": "./cjs/index.js"
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
     },
     "./node": {
-      "import": "./mjs/node.js",
-      "require": "./cjs/node.js"
+      "import": "./lib/esm/node.js",
+      "require": "./lib/cjs/node.js"
     }
   },
   "scripts": {
-    "build-cjs": "babel ./src --out-dir ./cjs",
-    "build-mjs": "cross-env BABEL_ENV=module babel ./src --out-dir ./mjs",
-    "build": "npm run build-cjs && npm run build-mjs",
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "cross-env BABEL_ENV=esm babel ./src --out-dir ./lib/esm",
+    "build:cjs": "cross-env BABEL_ENV=cjs babel ./src --out-dir ./lib/cjs",
     "test": "node test/script.js"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "hpagent": "^1.2.0",
     "lodash": "^4.17.21",
     "set-cookie-parser": "^2.6.0",
-    "xss": "^1.0.14"
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.4",
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
-    "cross-env": "^7.0.3",
-    "axios": "^1.6.5"
+    "axios": "^1.6.8",
+    "cross-env": "^7.0.3"
   }
 }
