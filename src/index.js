@@ -79,7 +79,7 @@ export function promiseTimeout(milliseconds, promise) {
 }
 
 export function promiseSilent(promise) {
-    promise
+    return promise
         .then(() => {
         })
         .catch(() => {
