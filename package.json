@@ -1,6 +1,6 @@
 {
   "name": "melperjs",
-  "version": "8.1.0",
+  "version": "9.0.0",
   "description": "Javascript module to use predefined common functions and utilities",
   "keywords": [
     "melperjs",
@@ -46,9 +46,9 @@
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "@babel/cli": "^7.23.4",
-    "@babel/core": "^7.23.3",
-    "@babel/preset-env": "^7.23.3",
+    "@babel/cli": "^7.24.7",
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
     "axios": "^1.6.8",
     "cross-env": "^7.0.3"
   }

@@ -78,6 +78,14 @@ export function promiseTimeout(milliseconds, promise) {
     });
 }
 
+export function promiseSilent(promise) {
+    promise
+        .then(() => {
+        })
+        .catch(() => {
+        });
+}
+
 export function splitClear(rawText, separator = null) {
     separator = separator ?? /\r?\n/;
     return rawText.split(separator).map(item => item.trim()).filter(item => !isEmpty(item));
@@ -112,6 +120,30 @@ export function pascalCase(str) {
 export function titleCase(str) {
     str = str || "";
     return str.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+export function parseNumFromObj(obj) {
+    for (let key in obj) {
+        let value = obj[key];
+        let number = parseFloat(value);
+        if (typeof value === 'string' && !isNaN(number)) {
+            value = number;
+        }
+        obj[key] = value;
+    }
+    return obj;
+}
+
+export function parseIntFromObj(obj) {
+    for (let key in obj) {
+        let value = obj[key];
+        let number = parseInt(value);
+        if (typeof value === 'string' && !isNaN(number) && value.length === number.toString().length) {
+            value = number;
+        }
+        obj[key] = value;
+    }
+    return obj;
 }
 
 export function objectStringify(obj) {
@@ -214,7 +246,8 @@ export function randomUuid(useDashes = true) {
     return useDashes ? uuid : uuid.replaceAll("-", "");
 }
 
-export function randomWeighted(dict, randomFunc = (totalWeight) => Math.random() * totalWeight) {
+export function randomWeighted(dict, randomFunc = null) {
+    randomFunc = randomFunc || ((totalWeight) => Math.random() * totalWeight);
     let elements = Object.keys(dict);
     let weights = Object.values(dict);
 
@@ -228,6 +261,14 @@ export function randomWeighted(dict, randomFunc = (totalWeight) => Math.random()
         if (randomNum <= weightSum) {
             return elements[i];
         }
+    }
+}
+
+export function randomElement(obj) {
+    if(Array.isArray(obj)) {
+        return obj[Math.floor(Math.random() * obj.length)];
+    }else{
+        return obj[randomElement(Object.keys(obj))];
     }
 }
 
