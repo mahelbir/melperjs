@@ -3,7 +3,7 @@ import {promises as fsp} from "fs";
 import path from "path";
 import crypto from "crypto";
 import {networkInterfaces} from "os";
-import {execSync} from "child_process";
+import {exec, execSync} from "child_process";
 
 import bcrypt from "bcryptjs";
 
@@ -55,6 +55,20 @@ export function tokenElement(obj) {
     }
 }
 
+export function executeCommand(command) {
+    return new Promise((resolve, reject) => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+            } else if (stderr) {
+                reject(stderr);
+            } else {
+                resolve(stdout.trim());
+            }
+        });
+    });
+}
+
 export function serverIp() {
     const interfaces = networkInterfaces();
     for (const devName in interfaces) {
@@ -87,7 +101,7 @@ export function createNumDir(mainDirectory) {
     fs.mkdirSync(mainDirectory, {recursive: true});
     for (let i = 0; i <= 9; i++) {
         try {
-            fs.mkdirSync(path.join(mainDirectory, i.toString()));
+            fs.mkdirSync(path.join(mainDirectory, i.toString()), {recursive: true});
         } catch (e) {
             console.error(`createNumDir:${i}`, e.message);
         }

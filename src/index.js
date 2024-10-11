@@ -3,6 +3,7 @@ import setCookieParser from "set-cookie-parser";
 import camelCase from "lodash/camelCase.js";
 import upperFirst from "lodash/upperFirst.js";
 import isEmpty from "lodash/isEmpty.js";
+import shuffle from "lodash/shuffle.js";
 
 
 export const CONSTANTS = {
@@ -181,6 +182,12 @@ export function safeString(str) {
     });
 }
 
+export function shuffleString(str) {
+    const collection = str.split('');
+    const shuffled = shuffle(collection);
+    return shuffled.join('');
+}
+
 export function randomString(length, useNumbers = true, useUppercase = false) {
 
     let characters = CONSTANTS.LOWER_CASE;
@@ -265,10 +272,23 @@ export function randomWeighted(dict, randomFunc = null) {
 }
 
 export function randomElement(obj) {
-    if(Array.isArray(obj)) {
+    if (Array.isArray(obj)) {
         return obj[Math.floor(Math.random() * obj.length)];
-    }else{
+    } else {
         return obj[randomElement(Object.keys(obj))];
+    }
+}
+
+export function indexByTime(index) {
+    const date = new Date();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    if (hour < 20) {
+        return (index + hour) % 10;
+    } else {
+        const totalMinutes = (hour - 20) * 60 + minute;
+        const minuteIndex = Math.floor(totalMinutes / 24);
+        return (index + minuteIndex) % 10;
     }
 }
 

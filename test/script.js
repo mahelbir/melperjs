@@ -69,6 +69,7 @@ console.log(helper.objectStringify({
 }));
 console.log(helper.limitString("LONG TEXT", 7));
 console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
+console.log(helper.shuffleString("ABC123"));
 console.log(helper.randomString(32, true, true));
 console.log(helper.randomHex(8));
 console.log(helper.randomInteger(100, 1000));
@@ -84,6 +85,8 @@ console.log(nodeHelper.md5("data"));
 const password = nodeHelper.hashBcrypt("plain", "encryptionKey");
 console.log(password)
 console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password, "encryptionKey"));
+console.log(await nodeHelper.executeCommand("python --version"));
+console.log(helper.indexByTime(5));
 const cookies = helper.cookieDict(await axios.get("https://google.com"));
 console.log(cookies);
 console.log(helper.cookieHeader(cookies));
