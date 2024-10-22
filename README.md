@@ -34,9 +34,18 @@ try {
     await helper.promiseTimeout(1000, helper.sleepMs(2000));
 } catch (e) {
     console.error(e.message);
-    console.log("Timeout, Internal Error ?", helper.isIntlError(e));
+    console.log("Timeout, Internal Error ?", helper.isIntlHttpError(e));
 }
-helper.promiseSilent(helper.sleep(5))
+const errorPronePromise = helper.retryFn(async () => {
+    console.log("Retry this function");
+    throw new Error("error")
+}, 5, (attempt, error, result) => {
+    if (attempt % 2 === 0) {
+        console.error("Even attempt error");
+    }
+});
+helper.promiseSilent(errorPronePromise);
+console.log("Is valid URL ?", helper.isValidURL("https://google.com"));
 console.log(helper.splitClear(`
     2.satır
     
@@ -88,6 +97,7 @@ console.log(helper.objectStringify({
     f: [3, 4, 5],
     g: false
 }));
+console.log(helper.modifyObjectKeys({"A": "B"}, (key) => key.toLowerCase()));
 console.log(helper.limitString("LONG TEXT", 7));
 console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
 console.log(helper.shuffleString("ABC123"));
@@ -102,7 +112,7 @@ console.log(nodeHelper.tokenHex(8));
 console.log(nodeHelper.tokenUuid(true));
 console.log(nodeHelper.tokenWeighted({strongProbability: 1000, lowProbability: 1}));
 console.log(nodeHelper.tokenElement(["vA", "vB", "vC"]));
-console.log(nodeHelper.md5("data"));
+console.log(nodeHelper.hash("md5", "data"));
 const password = nodeHelper.hashBcrypt("plain", "encryptionKey");
 console.log(password)
 console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password, "encryptionKey"));

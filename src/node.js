@@ -108,8 +108,16 @@ export function createNumDir(mainDirectory) {
     }
 }
 
+export function hash(algorithm, data) {
+    return crypto.createHash(algorithm).update(data).digest("hex");
+}
+
 export function md5(data) {
-    return crypto.createHash('md5').update(data).digest("hex");
+    return hash("md5", data);
+}
+
+export function sha256(data) {
+    return hash("sha256", data);
 }
 
 export function hashBcrypt(plainText, encryptionKey = "") {

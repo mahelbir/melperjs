@@ -87,6 +87,30 @@ export function promiseSilent(promise) {
         });
 }
 
+export async function retryFn(fn, retries, errorFn = null) {
+    let result = null;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            result = await fn();
+            return result;
+        } catch (error) {
+            errorFn?.(attempt, error, result);
+            if (attempt >= retries) {
+                throw error;
+            }
+        }
+    }
+}
+
+export function isValidURL(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export function splitClear(rawText, separator = null) {
     separator = separator ?? /\r?\n/;
     return rawText.split(separator).map(item => item.trim()).filter(item => !isEmpty(item));
@@ -162,6 +186,13 @@ export function objectStringify(obj) {
         }
     }
     return obj;
+}
+
+export function modifyObjectKeys(obj, callFn) {
+    return Object.keys(obj).reduce((acc, key) => {
+        acc[callFn(key)] = obj[key];
+        return acc;
+    }, {});
 }
 
 export function limitString(str, limit = 35, omission = "...") {
@@ -316,17 +347,23 @@ export function isIntlHttpCode(httpCode) {
         httpCode === 100 ||
         httpCode === 402 ||
         httpCode === 407 ||
+        httpCode === 417 ||
         (460 <= httpCode && httpCode < 470) ||
         500 <= httpCode
     );
 }
 
-export function isIntlError(e) {
+export function isIntlHttpError(e) {
+    const message = e?.message?.toLowerCase?.() || "";
+
     return (
-        e?.message?.toLowerCase?.()?.includes?.("timeout") ||
-        e?.message?.toLowerCase?.()?.includes?.("aborted") ||
-        e?.message?.toLowerCase?.()?.includes?.("tls connection") ||
-        e?.message?.toLowerCase?.()?.includes?.("socket hang") ||
+        message.includes("timeout") ||
+        message.includes("aborted") ||
+        message.includes("socket hang") ||
+        message.includes("proxy") ||
+        message.includes("tls connection") ||
+        message.includes("payment") ||
+        message.includes("expectation") ||
         isIntlHttpCode(e?.response?.status)
     )
 }
