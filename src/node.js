@@ -38,6 +38,10 @@ export function tokenHex(length) {
         .slice(0, length);
 }
 
+export function tokenInteger(min, max) {
+    return crypto.randomInt(min, max);
+}
+
 export function tokenUuid(useDashes = true) {
     const uuid = crypto.randomUUID().toString();
     return useDashes ? uuid : uuid.replaceAll("-", "")
@@ -97,9 +101,9 @@ export function getVersion() {
     }
 }
 
-export function createNumDir(mainDirectory) {
+export function createNumDir(mainDirectory, start = 0, end = 9) {
     fs.mkdirSync(mainDirectory, {recursive: true});
-    for (let i = 0; i <= 9; i++) {
+    for (let i = start; i <= end; i++) {
         try {
             fs.mkdirSync(path.join(mainDirectory, i.toString()), {recursive: true});
         } catch (e) {
@@ -211,4 +215,35 @@ export async function writeJsonFile(filePath, data) {
 export function writeJsonFileSync(filePath, data) {
     const jsonData = JSON.stringify(data);
     return fs.writeFileSync(filePath, jsonData, 'utf8');
+}
+
+export async function cleanDirectory(directoryPath, keepDir = true) {
+    try {
+        const stats = await fsp.stat(directoryPath).catch(() => null);
+        if (!stats) {
+            if (keepDir) {
+                await fsp.mkdir(directoryPath, {recursive: true});
+            }
+            return;
+        }
+        const files = await fsp.readdir(directoryPath);
+        for (const file of files) {
+            const filePath = path.join(directoryPath, file);
+            const fileStat = await fsp.stat(filePath);
+
+            if (fileStat.isDirectory()) {
+                await cleanDirectory(filePath, false);
+            } else {
+                await fsp.unlink(filePath);
+            }
+        }
+
+        if (!keepDir) {
+            await fsp.rmdir(directoryPath);
+        }
+
+        return true;
+    } catch (error) {
+        throw error;
+    }
 }

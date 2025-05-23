@@ -14,16 +14,13 @@ export const CONSTANTS = {
 };
 
 export function Exception(message, response = {}, name = null) {
-    class ExceptionClass extends Error {
-        constructor(message, response, name) {
-            super(message);
-            response.status = response.status || 400;
-            this.response = response;
-            this.name = name ? pascalCase(name) : "Exception";
-        }
+    const error = new Error(message);
+    error.name = name || "Exception";
+    error.response = response;
+    if (!error.response?.status && typeof error.response === "object") {
+        error.response.status = 400;
     }
-
-    return new ExceptionClass(message, response, name);
+    return error;
 }
 
 export async function forever(cooldown, onSuccess, onError = null, onCompleted = null) {
@@ -142,16 +139,17 @@ export function pascalCase(str) {
     return upperFirst(camelCase(str));
 }
 
-export function titleCase(str) {
+export function titleCase(str, separator = " ") {
     str = str || "";
-    return str.replace(/\b\w/g, char => char.toUpperCase());
+    const words = str.split(separator);
+    return words.map(word => upperFirst(word)).join(separator);
 }
 
 export function parseNumFromObj(obj) {
     for (let key in obj) {
         let value = obj[key];
         let number = parseFloat(value);
-        if (typeof value === 'string' && !isNaN(number)) {
+        if (typeof value === 'string' && !isNaN(number) && !value.includes("_")) {
             value = number;
         }
         obj[key] = value;

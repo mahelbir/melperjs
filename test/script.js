@@ -1,6 +1,7 @@
 import axios from "axios"
 import * as helper from "../src/index.js";
 import * as nodeHelper from "../src/node.js";
+import {tokenInteger} from "../src/node.js";
 
 
 console.log(helper.CONSTANTS);
@@ -88,6 +89,7 @@ console.log(helper.randomWeighted({strongProbability: 1000, lowProbability: 1}))
 console.log(helper.randomElement({a: "vA", b: "vB", c: "vC"}));
 console.log(nodeHelper.tokenString(32, true, true));
 console.log(nodeHelper.tokenHex(8));
+console.log(helper.randomInteger(100, 1000));
 console.log(nodeHelper.tokenUuid(true));
 console.log(nodeHelper.tokenWeighted({strongProbability: 1000, lowProbability: 1}));
 console.log(nodeHelper.tokenElement(["vA", "vB", "vC"]));
@@ -110,6 +112,7 @@ console.log("HTTP CODE: 407 (Failed Proxy Auth) ?", helper.isIntlHttpCode(407));
 nodeHelper.createNumDir("test");
 await nodeHelper.writeJsonFile("test.json", {test: "test json file"});
 console.log(nodeHelper.readJsonFileSync("test.json"));
+console.log(await nodeHelper.cleanDirectory("test/0", false));
 console.log("VERSIONED BY .GIT", "v" + nodeHelper.getVersion());
 console.log(helper.Exception("something went wrong", {status: 400}, "bad request error"));
 await helper.forever(1000, async () => {
