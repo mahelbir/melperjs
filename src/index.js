@@ -19,7 +19,10 @@ export function Exception(message, response = {}, name = null) {
     const error = new Error(message);
     error.name = name || "Exception";
     error.response = response;
-    if (!error.response?.status && typeof error.response === "object") {
+    if (checkEmpty(response)) {
+        error.response = {};
+    }
+    if (!error.response?.status) {
         error.response.status = 400;
     }
     return error;
@@ -133,7 +136,7 @@ export function titleCase(str, separator = " ") {
     return words.map(word => upperFirst(word)).join(separator);
 }
 
-function isInt32(value) {
+export function isInt32(value) {
     return Number.isInteger(value) && value >= CONSTANTS.INT32_MIN && value <= CONSTANTS.INT32_MAX;
 }
 
@@ -175,14 +178,6 @@ export function findKeyNode(key, node, pair = null) {
     return null;
 }
 
-export function flipObject(obj) {
-    return Object.fromEntries(
-        Object
-            .entries(obj)
-            .map(([key, value]) => [value, key])
-    )
-}
-
 export function waitForProperty(obj, propertyName, timeout = 5000, interval = 100) {
     return new Promise((resolve, reject) => {
         const startTime = Date.now();
@@ -197,6 +192,23 @@ export function waitForProperty(obj, propertyName, timeout = 5000, interval = 10
             }
         }, interval);
     });
+}
+
+export function flipObject(obj) {
+    return Object.fromEntries(
+        Object
+            .entries(obj)
+            .map(([key, value]) => [value, key])
+    )
+}
+
+export function shuffleObject(obj) {
+    const arr = Object.entries(obj);
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return Object.fromEntries(arr);
 }
 
 export function objectStringify(obj) {
@@ -394,4 +406,14 @@ export function isIntlHttpError(e) {
         message.includes("expectation") ||
         isIntlHttpCode(e?.response?.status)
     )
+}
+
+export function getResponseError(e, limit = 115) {
+    let response;
+    if (e?.response?.status && e.response.data) {
+        response = `${e.response.status}|${e.response.data}`;
+    } else if (e?.response?.data) {
+        response = e.response.data;
+    }
+    return limitString(response || e.message, limit).trim();
 }
