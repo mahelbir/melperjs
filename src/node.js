@@ -88,13 +88,17 @@ export function serverIp() {
 
 export function getVersion() {
     try {
-        const date = new Date(execSync('git show -s --format=%ci HEAD').toString().trim());
+        const timestamp = parseInt(execSync('git show -s --format=%ct HEAD').toString().trim());
+        if (isNaN(timestamp)) {
+            return "1.0";
+        }
+        const date = new Date(timestamp * 1000);
         const formatDatePart = (value) => value.toString().padStart(2, '0');
-        const year = date.getFullYear().toString().slice(-2);
-        const month = formatDatePart(date.getMonth() + 1);
-        const day = formatDatePart(date.getDate());
-        const hour = formatDatePart(date.getHours());
-        const minute = formatDatePart(date.getMinutes());
+        const year = date.getUTCFullYear().toString().slice(-2);
+        const month = formatDatePart(date.getUTCMonth() + 1);
+        const day = formatDatePart(date.getUTCDate());
+        const hour = formatDatePart(date.getUTCHours());
+        const minute = formatDatePart(date.getUTCMinutes());
         return `${year}${month}${day}.${hour}${minute}`;
     } catch {
         return "1.0";
@@ -189,21 +193,21 @@ export function proxyValue(proxies) {
     return proxy || null;
 }
 
-export async function readJsonFile(filePath) {
+export async function readJsonFile(filePath, defaultValue = {}) {
     try {
         const data = await fsp.readFile(filePath, 'utf8');
         return JSON.parse(data);
     } catch (error) {
-        return {};
+        return defaultValue;
     }
 }
 
-export function readJsonFileSync(filePath) {
+export function readJsonFileSync(filePath, defaultValue = {}) {
     try {
         const data = fs.readFileSync(filePath, 'utf8');
         return JSON.parse(data);
     } catch (error) {
-        return {};
+        return defaultValue;
     }
 }
 

@@ -11,6 +11,8 @@ export const CONSTANTS = {
     UPPER_CASE: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     HEXADECIMAL: "0123456789abcdef",
     NUMBERS: "0123456789",
+    INT32_MIN: -2147483648,
+    INT32_MAX: 2147483647
 };
 
 export function Exception(message, response = {}, name = null) {
@@ -91,7 +93,7 @@ export async function retryFn(fn, retries, errorFn = null) {
             result = await fn();
             return result;
         } catch (error) {
-            errorFn?.(attempt, error, result);
+            errorFn && await errorFn(attempt, error, result);
             if (attempt >= retries) {
                 throw error;
             }
@@ -113,20 +115,6 @@ export function splitClear(rawText, separator = null) {
     return rawText.split(separator).map(item => item.trim()).filter(item => !isEmpty(item));
 }
 
-export function findKeyNode(key, node, pair = null) {
-    if (node && node.hasOwnProperty(key) && (pair ? node[key] === pair : true)) {
-        return node;
-    } else if (typeof node === 'object') {
-        for (let index in node) {
-            const result = findKeyNode(key, node[index], pair);
-            if (result) {
-                return result;
-            }
-        }
-    }
-    return null;
-}
-
 export function checkEmpty(value) {
     if (typeof value === "number") {
         return value === 0;
@@ -143,6 +131,10 @@ export function titleCase(str, separator = " ") {
     str = str || "";
     const words = str.split(separator);
     return words.map(word => upperFirst(word)).join(separator);
+}
+
+function isInt32(value) {
+    return Number.isInteger(value) && value >= CONSTANTS.INT32_MIN && value <= CONSTANTS.INT32_MAX;
 }
 
 export function parseNumFromObj(obj) {
@@ -167,6 +159,44 @@ export function parseIntFromObj(obj) {
         obj[key] = value;
     }
     return obj;
+}
+
+export function findKeyNode(key, node, pair = null) {
+    if (node && node.hasOwnProperty(key) && (pair ? node[key] === pair : true)) {
+        return node;
+    } else if (typeof node === 'object') {
+        for (let index in node) {
+            const result = findKeyNode(key, node[index], pair);
+            if (result) {
+                return result;
+            }
+        }
+    }
+    return null;
+}
+
+export function flipObject(obj) {
+    return Object.fromEntries(
+        Object
+            .entries(obj)
+            .map(([key, value]) => [value, key])
+    )
+}
+
+export function waitForProperty(obj, propertyName, timeout = 5000, interval = 100) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+
+        const checkProperty = setInterval(() => {
+            if (obj.hasOwnProperty(propertyName)) {
+                clearInterval(checkProperty);
+                resolve();
+            } else if (Date.now() - startTime > timeout) {
+                clearInterval(checkProperty);
+                reject(new Error(`Property ${propertyName} did not appear within ${timeout} milliseconds`));
+            }
+        }, interval);
+    });
 }
 
 export function objectStringify(obj) {
