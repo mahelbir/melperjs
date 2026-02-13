@@ -378,6 +378,21 @@ export function cookieHeader(cookieDict) {
         .join(';')
 }
 
+export function cookieStringToObject(cookieString) {
+    const cookies = {};
+
+    if (!cookieString) return cookies;
+
+    cookieString.split(';').forEach(cookie => {
+        const [key, ...valueParts] = cookie.trim().split('=');
+        if (key) {
+            cookies[key.trim()] = valueParts.join('=').trim();
+        }
+    });
+
+    return cookies;
+}
+
 export function isIntlHttpCode(httpCode) {
     return (
         httpCode === undefined ||

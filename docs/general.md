@@ -268,6 +268,14 @@ Converts a cookie dictionary to a cookie header string.
   - `cookieDict` (Object): Cookie name-value pairs
 - **Returns:** Cookie header string
 
+### cookieStringToObject(cookieString)
+
+Parses a cookie header string into an object of key-value pairs.
+
+- **Parameters:**
+  - `cookieString` (String): Cookie string
+- **Returns:** Object with cookie name-value pairs
+
 ### isIntlHttpCode(httpCode)
 
 Checks if an HTTP code is likely to be an internal issue.

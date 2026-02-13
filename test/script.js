@@ -102,6 +102,7 @@ console.log(helper.indexByTime(5));
 const cookies = helper.cookieDict(await axios.get("https://google.com"));
 console.log(cookies);
 console.log(helper.cookieHeader(cookies));
+console.log(helper.cookieStringToObject("session=abc123; user=john; theme=dark"));
 const proxy = nodeHelper.formatProxy("127.0.0.1:8080:id:pw-{SESSION}");
 console.log(proxy);
 console.log(nodeHelper.proxyObject(proxy));

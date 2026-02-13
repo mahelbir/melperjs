@@ -1,6 +1,6 @@
 {
   "name": "melperjs",
-  "version": "14.0.0",
+  "version": "14.1.0",
   "description": "Javascript module to use predefined common functions and utilities",
   "keywords": [
     "melperjs",
@@ -41,15 +41,15 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "hpagent": "^1.2.0",
-    "lodash": "^4.17.21",
-    "set-cookie-parser": "^2.7.1",
+    "lodash": "4.17.23",
+    "set-cookie-parser": "^3.0.1",
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "@babel/cli": "^7.27.2",
-    "@babel/core": "^7.27.1",
-    "@babel/preset-env": "^7.27.2",
-    "axios": "^1.9.0",
-    "cross-env": "^7.0.3"
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "axios": "1.13.5",
+    "cross-env": "^10.1.0"
   }
 }

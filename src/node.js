@@ -128,8 +128,8 @@ export function sha256(data) {
     return hash("sha256", data);
 }
 
-export function hashBcrypt(plainText, encryptionKey = "") {
-    return bcrypt.hashSync(plainText + encryptionKey, bcrypt.genSaltSync(10));
+export function hashBcrypt(plainText, encryptionKey = "", rounds = 12) {
+    return bcrypt.hashSync(plainText + encryptionKey, bcrypt.genSaltSync(rounds));
 }
 
 export function verifyBcrypt(plainText, hash, encryptionKey = "") {
