@@ -8,6 +8,8 @@ The library provides the following constants:
 - `CONSTANTS.UPPER_CASE`: Contains uppercase letters (A-Z)
 - `CONSTANTS.HEXADECIMAL`: Contains hexadecimal characters (0-9, a-f)
 - `CONSTANTS.NUMBERS`: Contains numeric characters (0-9)
+- `CONSTANTS.INT32_MIN`: Minimum 32-bit integer value (-2147483648)
+- `CONSTANTS.INT32_MAX`: Maximum 32-bit integer value (2147483647)
 
 ### Exception(message, response = {}, name = null)
 
@@ -192,6 +194,17 @@ Returns an index value modified based on current hour and minute.
   - `index` (Number): Base index value
 - **Returns:** Modified index value (0-9)
 
+### waitForProperty(obj, propertyName, timeout = 5000, interval = 100)
+
+Waits for a property to appear on an object within a timeout period.
+
+- **Parameters:**
+  - `obj` (Object): Object to watch
+  - `propertyName` (String): Property name to wait for
+  - `timeout` (Number): Maximum time to wait in milliseconds (default: 5000)
+  - `interval` (Number): Check interval in milliseconds (default: 100)
+- **Returns:** Promise that resolves when property appears or rejects on timeout
+
 ### findKeyNode(key, node, pair = null)
 
 Recursively searches for a key in an object tree.
@@ -234,6 +247,22 @@ Converts all values in an object to strings.
   - `obj` (Object): Object to convert
 - **Returns:** Object with string values
 
+### flipObject(obj)
+
+Swaps keys and values of an object.
+
+- **Parameters:**
+  - `obj` (Object): Object to flip
+- **Returns:** New object with keys and values swapped
+
+### shuffleObject(obj)
+
+Randomly shuffles the order of key-value pairs in an object.
+
+- **Parameters:**
+  - `obj` (Object): Object to shuffle
+- **Returns:** New object with shuffled order
+
 ### modifyObjectKeys(obj, callFn)
 
 Transforms all keys in an object using a callback function.
@@ -250,6 +279,14 @@ Checks if a string is a valid URL.
 - **Parameters:**
   - `url` (String): URL to validate
 - **Returns:** Boolean indicating URL validity
+
+### isInt32(value)
+
+Checks if a value is a valid 32-bit integer.
+
+- **Parameters:**
+  - `value` (Any): Value to check
+- **Returns:** Boolean indicating if value is a 32-bit integer
 
 ### cookieDict(res, decodeValues = false)
 
@@ -291,3 +328,12 @@ Checks if an HTTP error is likely to be an internal issue.
 - **Parameters:**
   - `e` (Error): Error object
 - **Returns:** Boolean indicating if error is internal
+
+### getResponseError(e, limit = 115)
+
+Extracts a concise error message from an HTTP error response.
+
+- **Parameters:**
+  - `e` (Error): Error object with optional response data
+  - `limit` (Number): Maximum length of the error string (default: 115)
+- **Returns:** Trimmed error string

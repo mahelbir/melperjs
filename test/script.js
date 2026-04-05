@@ -1,7 +1,6 @@
 import axios from "axios"
 import * as helper from "../src/index.js";
 import * as nodeHelper from "../src/node.js";
-import {tokenInteger} from "../src/node.js";
 
 
 console.log(helper.CONSTANTS);
@@ -21,7 +20,7 @@ const errorPronePromise = helper.retryFn(async () => {
     throw new Error("error")
 }, 5, (attempt, error, result) => {
     if (attempt % 2 === 0) {
-        console.error("Even attempt error");
+        console.error("Even attempt error", result, error);
     }
 });
 helper.promiseSilent(errorPronePromise);
@@ -31,6 +30,10 @@ console.log(helper.splitClear(`
     
     4.satır
     `))
+console.log(helper.waitForProperty({}, "test", 500, 100).catch(e => console.log("waitForProperty timeout:", e.message)));
+const waitObj = {};
+setTimeout(() => waitObj.delayed = true, 200);
+console.log("waitForProperty resolved:", await helper.waitForProperty(waitObj, "delayed", 1000, 50));
 console.log(helper.findKeyNode("c", {
     a: {
         b: {
@@ -42,6 +45,8 @@ console.log(helper.findKeyNode("c", {
         }
     }
 }));
+console.log("isInt32(100) ?", helper.isInt32(100));
+console.log("isInt32(2147483648) ?", helper.isInt32(2147483648));
 console.log("'' empty ?", helper.checkEmpty(''));
 console.log("1 empty ?", helper.checkEmpty(1));
 console.log("0 empty ?", helper.checkEmpty(1));
@@ -77,6 +82,8 @@ console.log(helper.objectStringify({
     f: [3, 4, 5],
     g: false
 }));
+console.log(helper.flipObject({a: "1", b: "2", c: "3"}));
+console.log(helper.shuffleObject({a: 1, b: 2, c: 3, d: 4}));
 console.log(helper.modifyObjectKeys({"A": "B"}, (key) => key.toLowerCase()));
 console.log(helper.limitString("LONG TEXT", 7));
 console.log(helper.safeString("<strong>SAFE TEXT</strong>"));
@@ -87,16 +94,22 @@ console.log(helper.randomInteger(100, 1000));
 console.log(helper.randomUuid(true));
 console.log(helper.randomWeighted({strongProbability: 1000, lowProbability: 1}));
 console.log(helper.randomElement({a: "vA", b: "vB", c: "vC"}));
+console.log(helper.getResponseError({message: "Request failed", response: {status: 404, data: "Not Found"}}));
+console.log("tokenBoolean:", nodeHelper.tokenBoolean());
 console.log(nodeHelper.tokenString(32, true, true));
 console.log(nodeHelper.tokenHex(8));
 console.log(helper.randomInteger(100, 1000));
 console.log(nodeHelper.tokenUuid(true));
 console.log(nodeHelper.tokenWeighted({strongProbability: 1000, lowProbability: 1}));
 console.log(nodeHelper.tokenElement(["vA", "vB", "vC"]));
+console.log("seedUuid:", nodeHelper.seedUuid("test-seed"));
+console.log("seedUuid same seed:", nodeHelper.seedUuid("test-seed"));
 console.log(nodeHelper.hash("md5", "data"));
 const password = nodeHelper.hashBcrypt("plain", "encryptionKey");
 console.log(password)
 console.log("passwordHash verified ?", nodeHelper.verifyBcrypt("plain", password, "encryptionKey"));
+console.log("base64Encode:", nodeHelper.base64Encode("Hello World"));
+console.log("base64Decode:", nodeHelper.base64Decode(nodeHelper.base64Encode("Hello World")));
 console.log(await nodeHelper.executeCommand("python --version"));
 console.log(helper.indexByTime(5));
 const cookies = helper.cookieDict(await axios.get("https://google.com"));

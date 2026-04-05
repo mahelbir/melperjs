@@ -10,6 +10,10 @@ import bcrypt from "bcryptjs";
 import {CONSTANTS, randomWeighted, splitClear} from "./index.js";
 
 
+export function tokenBoolean() {
+    return crypto.randomBytes(1)[0] % 2 === 0;
+}
+
 export function tokenString(length, useNumbers = true, useUppercase = false) {
     const lowercaseChars = CONSTANTS.LOWER_CASE;
     const uppercaseChars = CONSTANTS.UPPER_CASE;
@@ -57,6 +61,21 @@ export function tokenElement(obj) {
     } else {
         return obj[tokenElement(Object.keys(obj))];
     }
+}
+
+export function seedUuid(seed) {
+    const hash = crypto.createHash('md5').update(seed).digest();
+
+    hash[6] = (hash[6] & 0x0f) | 0x40;
+    hash[8] = (hash[8] & 0x3f) | 0x80;
+
+    return [
+        hash.subarray(0, 4).toString('hex'),
+        hash.subarray(4, 6).toString('hex'),
+        hash.subarray(6, 8).toString('hex'),
+        hash.subarray(8, 10).toString('hex'),
+        hash.subarray(10, 16).toString('hex')
+    ].join('-');
 }
 
 export function executeCommand(command) {
@@ -126,6 +145,14 @@ export function md5(data) {
 
 export function sha256(data) {
     return hash("sha256", data);
+}
+
+export function base64Encode(data) {
+    return Buffer.from(data).toString('base64');
+}
+
+export function base64Decode(data, encoding = 'utf8') {
+    return Buffer.from(data, 'base64').toString(encoding);
 }
 
 export function hashBcrypt(plainText, encryptionKey = "", rounds = 12) {

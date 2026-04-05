@@ -2,6 +2,12 @@
 
 This document provides information about the Node.js specific functions available in the node module (`melperjs/node`).
 
+### tokenBoolean()
+
+Generates a cryptographically secure random boolean.
+
+- **Returns:** Random boolean value
+
 ### tokenString(length, useNumbers = true, useUppercase = false)
 
 Generates a cryptographically secure random string.
@@ -53,6 +59,14 @@ Returns a cryptographically secure random element from an array or object.
   - `obj` (Array|Object): Collection to select from
 - **Returns:** Random element
 
+### seedUuid(seed)
+
+Generates a deterministic UUID v4 from a seed string using MD5 hashing.
+
+- **Parameters:**
+  - `seed` (String): Seed value to generate UUID from
+- **Returns:** UUID string with dashes
+
 ### executeCommand(command)
 
 Executes a shell command and returns the result.
@@ -83,21 +97,23 @@ Creates a main directory with numbered subdirectories.
   - `end` (Number): Last directory number to create (default: 9)
 - **Returns:** void
 
-### readJsonFile(filePath)
+### readJsonFile(filePath, defaultValue = {})
 
 Reads and parses a JSON file asynchronously.
 
 - **Parameters:**
   - `filePath` (String): Path to JSON file
-- **Returns:** Promise that resolves with parsed JSON object
+  - `defaultValue` (Any): Value to return if file cannot be read (default: `{}`)
+- **Returns:** Promise that resolves with parsed JSON object or default value
 
-### readJsonFileSync(filePath)
+### readJsonFileSync(filePath, defaultValue = {})
 
 Reads and parses a JSON file synchronously.
 
 - **Parameters:**
   - `filePath` (String): Path to JSON file
-- **Returns:** Parsed JSON object
+  - `defaultValue` (Any): Value to return if file cannot be read (default: `{}`)
+- **Returns:** Parsed JSON object or default value
 
 ### writeJsonFile(filePath, data)
 
@@ -151,13 +167,31 @@ Creates a SHA-256 hash of data.
   - `data` (String): Data to hash
 - **Returns:** Hex string of SHA-256 hash
 
-### hashBcrypt(plainText, encryptionKey = "")
+### base64Encode(data)
+
+Encodes data to Base64 string.
+
+- **Parameters:**
+  - `data` (String): Data to encode
+- **Returns:** Base64 encoded string
+
+### base64Decode(data, encoding = 'utf8')
+
+Decodes a Base64 string.
+
+- **Parameters:**
+  - `data` (String): Base64 string to decode
+  - `encoding` (String): Output encoding (default: 'utf8')
+- **Returns:** Decoded string
+
+### hashBcrypt(plainText, encryptionKey = "", rounds = 12)
 
 Creates a bcrypt hash of text with optional encryption key.
 
 - **Parameters:**
   - `plainText` (String): Text to hash
-  - `encryptionKey` (String): Additional encryption key (optional)
+  - `encryptionKey` (String): Additional encryption key (default: "")
+  - `rounds` (Number): Bcrypt salt rounds (default: 12)
 - **Returns:** Bcrypt hash string
 
 ### verifyBcrypt(plainText, hash, encryptionKey = "")
