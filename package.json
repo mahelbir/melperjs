@@ -1,16 +1,28 @@
 {
   "name": "melperjs",
-  "version": "15.0.0",
-  "description": "Javascript module to use predefined common functions and utilities",
+  "description": "Utility library for strings, objects, tokens, hashing, cookies, proxies, file/shell helpers and more.",
   "keywords": [
     "melperjs",
-    "melper js",
-    "helper js",
-    "helper",
+    "utilities",
     "utils",
-    "common functions",
-    "javascript helper",
-    "nodejs helper"
+    "helpers",
+    "javascript",
+    "nodejs",
+    "esm",
+    "cjs",
+    "string",
+    "object",
+    "random",
+    "token",
+    "uuid",
+    "bcrypt",
+    "hash",
+    "crypto",
+    "cookie",
+    "base64",
+    "proxy",
+    "file-system",
+    "shell"
   ],
   "repository": {
     "type": "git",
@@ -22,21 +34,26 @@
   "files": [
     "lib/**/*"
   ],
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
-      "import": "./lib/esm/index.js",
-      "require": "./lib/cjs/index.js"
+      "import": "./lib/esm/index.mjs",
+      "require": "./lib/cjs/index.cjs"
     },
     "./node": {
-      "import": "./lib/esm/node.js",
-      "require": "./lib/cjs/node.js"
+      "import": "./lib/esm/node.mjs",
+      "require": "./lib/cjs/node.cjs"
     }
   },
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
-    "build:esm": "cross-env BABEL_ENV=esm babel ./src --out-dir ./lib/esm",
-    "build:cjs": "cross-env BABEL_ENV=cjs babel ./src --out-dir ./lib/cjs",
-    "test": "node test/script.js"
+    "build:esm": "cross-env BABEL_ENV=esm babel ./src --out-dir ./lib/esm --out-file-extension .mjs",
+    "build:cjs": "cross-env BABEL_ENV=cjs babel ./src --out-dir ./lib/cjs --out-file-extension .cjs",
+    "test": "node --test 'tests/**/*.test.js'",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -48,8 +65,10 @@
   "devDependencies": {
     "@babel/cli": "^7.28.6",
     "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.2",
-    "axios": "1.14.0",
+    "@babel/preset-env": "^7.29.5",
+    "babel-plugin-replace-import-extension": "^1.1.5",
+    "babel-plugin-transform-import-meta": "^2.3.3",
     "cross-env": "^10.1.0"
-  }
+  },
+  "version": "15.0.0"
 }

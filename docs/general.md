@@ -153,13 +153,14 @@ Generates a random hexadecimal string.
 
 ### randomInteger(min, max, callback)
 
-Generates a random integer between min and max.
+Generates a random integer in `[min, max)`. If called with a single number, that value is used as `max` with `min = 0` (e.g., `randomInteger(10)` returns an integer in `[0, 10)`).
 
 - **Parameters:**
-  - `min` (Number): Minimum value (inclusive)
+  - `min` (Number): Minimum value (inclusive); also accepted as the `max` when called with a single argument
   - `max` (Number): Maximum value (exclusive)
   - `callback` (Function): Optional callback to receive the result
-- **Returns:** Random integer or calls callback with result
+- **Returns:** Random integer, or calls `callback` with the result when one is provided
+- **Throws:** When `min`/`max` are not numbers, or when `max <= min`
 
 ### randomUuid(useDashes = true)
 
