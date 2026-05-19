@@ -1,340 +1,363 @@
 # General Functions
 
-This document provides information about the general utility functions available in the core module (`melperjs`).
+Browser-safe utilities exported from `melperjs`. No Node.js APIs are used here — every function runs in the browser and in Node.js without polyfills.
 
-The library provides the following constants:
+## Constants
 
-- `CONSTANTS.LOWER_CASE`: Contains lowercase letters (a-z)
-- `CONSTANTS.UPPER_CASE`: Contains uppercase letters (A-Z)
-- `CONSTANTS.HEXADECIMAL`: Contains hexadecimal characters (0-9, a-f)
-- `CONSTANTS.NUMBERS`: Contains numeric characters (0-9)
-- `CONSTANTS.INT32_MIN`: Minimum 32-bit integer value (-2147483648)
-- `CONSTANTS.INT32_MAX`: Maximum 32-bit integer value (2147483647)
+`CONSTANTS` bundles a few character sets and integer bounds that other functions in this module rely on. Useful when you need the same alphabets in your own code.
+
+- `CONSTANTS.LOWER_CASE` — lowercase ASCII letters (`a-z`).
+- `CONSTANTS.UPPER_CASE` — uppercase ASCII letters (`A-Z`).
+- `CONSTANTS.HEXADECIMAL` — hex digits (`0-9a-f`).
+- `CONSTANTS.NUMBERS` — decimal digits (`0-9`).
+- `CONSTANTS.INT32_MIN` — `-2147483648`.
+- `CONSTANTS.INT32_MAX` — `2147483647`.
+
+## Errors
 
 ### Exception(message, response = {}, name = null)
 
-Creates a custom error with additional properties.
+Builds a standard `Error` with two extra attached fields (`response`, custom `name`) so error handlers can carry HTTP-style context without subclassing. A null/empty `response` is normalized to `{}`.
 
 - **Parameters:**
-  - `message` (String): Error message
-  - `response` (Object): Response object (default: `{}`)
-  - `name` (String): Error name (default: `"Exception"`)
-- **Returns:** Error object with custom properties
+  - `message` (String): Human-readable error message.
+  - `response` (Object): Arbitrary payload attached as `error.response`.
+  - `name` (String|null): Overrides `error.name`. Defaults to `"Exception"`.
+- **Returns:** `Error` with `.response` and `.name` populated.
 
-### forever(cooldown, onSuccess, onError = null, onCompleted = null)
-
-Runs a function repeatedly with a cooldown period between executions.
-
-- **Parameters:**
-  - `cooldown` (Number): Milliseconds to wait between executions
-  - `onSuccess` (Function): Function to execute in the loop
-  - `onError` (Function): Error handler function (optional)
-  - `onCompleted` (Function): Function to run after each iteration (optional)
-- **Returns:** Promise that never resolves (runs forever)
-
-### sleepMs(milliseconds)
-
-Pauses execution for specified milliseconds.
-
-- **Parameters:**
-  - `milliseconds` (Number): Time to wait in milliseconds
-- **Returns:** Promise that resolves after the specified time
-
-### sleep(seconds)
-
-Pauses execution for specified seconds.
-
-- **Parameters:**
-  - `seconds` (Number): Time to wait in seconds
-- **Returns:** Promise that resolves after the specified time
-
-### promiseTimeout(milliseconds, promise)
-
-Adds a timeout to a promise.
-
-- **Parameters:**
-  - `milliseconds` (Number): Maximum time to wait
-  - `promise` (Promise): Promise to execute with timeout
-- **Returns:** Promise that resolves with the original promise result or rejects with a timeout error
-
-### promiseSilent(promise)
-
-Executes a promise, ignoring any success or error result.
-
-- **Parameters:**
-  - `promise` (Promise): Promise to execute silently
-- **Returns:** Promise that always resolves with no value
-
-### retryFn(fn, retries, errorFn = null)
-
-Retries a function multiple times until it succeeds or reaches the retry limit.
-
-- **Parameters:**
-  - `fn` (Function): Async function to execute
-  - `retries` (Number): Maximum number of retry attempts
-  - `errorFn` (Function): Called when an attempt fails (optional)
-- **Returns:** Result of the successful function execution
+## Time & Async
 
 ### time()
 
-Gets the current Unix timestamp (seconds since epoch).
+Current Unix timestamp in seconds (integer).
 
-- **Returns:** Current timestamp in seconds
+- **Returns:** Seconds since the epoch.
 
-### splitClear(rawText, separator = null)
+### sleepMs(milliseconds)
 
-Splits a string and removes empty items.
-
-- **Parameters:**
-  - `rawText` (String): String to split
-  - `separator` (String|RegExp): Separator to use (default: newline)
-- **Returns:** Array of non-empty trimmed strings
-
-### pascalCase(str)
-
-Converts a string to PascalCase.
+Promise that resolves after a delay, measured in milliseconds.
 
 - **Parameters:**
-  - `str` (String): String to convert
-- **Returns:** String in PascalCase format
+  - `milliseconds` (Number): Delay in ms.
+- **Returns:** `Promise<void>`.
 
-### titleCase(str, separator = " ")
+### sleep(seconds)
 
-Converts a string to Title Case.
-
-- **Parameters:**
-  - `str` (String): String to convert
-  - `separator` (String): Word separator (default: space)
-- **Returns:** String with each word capitalized
-
-### limitString(str, limit = 35, omission = "...")
-
-Truncates a string to a specified length.
+Same as `sleepMs` but the delay is given in seconds.
 
 - **Parameters:**
-  - `str` (String): String to truncate
-  - `limit` (Number): Maximum length (default: 35)
-  - `omission` (String): String to append (default: "...")
-- **Returns:** Truncated string
+  - `seconds` (Number): Delay in seconds.
+- **Returns:** `Promise<void>`.
 
-### safeString(str)
+### promiseTimeout(milliseconds, promise)
 
-Sanitizes a string by removing potential XSS content.
+Races a promise against a timer. If the promise doesn't settle in time the result rejects; either way the timer is cleared.
 
 - **Parameters:**
-  - `str` (String): String to sanitize
-- **Returns:** Sanitized string
+  - `milliseconds` (Number): Maximum wait time before rejecting.
+  - `promise` (Promise): The work to await.
+- **Returns:** Settles with the inner promise's value, or rejects with `Error("Promise timed out after Xms")`.
 
-### shuffleString(str)
+### promiseSilent(promise)
 
-Randomly shuffles the characters in a string.
-
-- **Parameters:**
-  - `str` (String): String to shuffle
-- **Returns:** Shuffled string
-
-### randomString(length, useNumbers = true, useUppercase = false)
-
-Generates a random string.
+Awaits a promise but swallows both the resolved value and any rejection. Handy for fire-and-forget work where you only care about the side effects.
 
 - **Parameters:**
-  - `length` (Number): Length of the string to generate
-  - `useNumbers` (Boolean): Include numbers (default: true)
-  - `useUppercase` (Boolean): Include uppercase letters (default: false)
-- **Returns:** Random string
+  - `promise` (Promise): The promise to consume silently.
+- **Returns:** `Promise<undefined>` that always resolves.
 
-### randomHex(length)
+### forever(delayMs, task, onError = null, onFinally = null)
 
-Generates a random hexadecimal string.
+Runs `task` in an infinite loop with a delay between iterations. Errors are routed to `onError`; `onFinally` runs after every iteration regardless of outcome. Any of the three callbacks can return a new positive number to update `delayMs` on the fly (useful for adaptive polling).
 
-- **Parameters:**
-  - `length` (Number): Length of the string to generate
-- **Returns:** Random hex string
-
-### randomInteger(min, max, callback)
-
-Generates a random integer in `[min, max)`. If called with a single number, that value is used as `max` with `min = 0` (e.g., `randomInteger(10)` returns an integer in `[0, 10)`).
+Errors thrown from `task` are caught and routed to `onError`; the loop keeps running. Errors thrown from `onError` propagate out and stop the loop — useful for soft shutdown by throwing on a stop signal. Errors thrown from `onFinally` are caught and ignored so that observability/cleanup failures cannot kill the worker.
 
 - **Parameters:**
-  - `min` (Number): Minimum value (inclusive); also accepted as the `max` when called with a single argument
-  - `max` (Number): Maximum value (exclusive)
-  - `callback` (Function): Optional callback to receive the result
-- **Returns:** Random integer, or calls `callback` with the result when one is provided
-- **Throws:** When `min`/`max` are not numbers, or when `max <= min`
+  - `delayMs` (Number): Initial delay in milliseconds between iterations. Must be a positive finite number.
+  - `task` (Function): Async function to invoke each iteration. Exceptions are caught and forwarded to `onError`.
+  - `onError` (Function): Called with the caught error when `task` throws. Throwing from here aborts the loop.
+  - `onFinally` (Function): Called after every iteration (success or failure). Errors thrown here are swallowed.
+- **Returns:** Promise that never resolves on its own; it rejects when `delayMs` validation fails or when `onError` throws.
+- **Throws:** When `delayMs` is not a positive finite number.
 
-### randomUuid(useDashes = true)
+### retry(callFn, maxAttempts, errorFn = null, {delayMs = 0, backoffFactor = 1} = {})
 
-Generates a random UUID.
-
-- **Parameters:**
-  - `useDashes` (Boolean): Whether to include dashes (default: true)
-- **Returns:** UUID string
-
-### randomWeighted(dict, randomFunc = null)
-
-Returns a random key based on weighted probabilities.
+Calls `callFn` up to `maxAttempts` times, returning the first successful result. Optionally waits between retries with an exponential backoff (delay grows by `delayMs * backoffFactor^(attempt-1)`).
 
 - **Parameters:**
-  - `dict` (Object): Object with keys and their weights
-  - `randomFunc` (Function): Custom random function (optional)
-- **Returns:** Selected key
+  - `callFn` (Function): Async function to attempt.
+  - `maxAttempts` (Number): Total attempt count (1 = no retries).
+  - `errorFn` (Function): Called as `(attempt, error)` after each failed attempt.
+  - `options.delayMs` (Number): Base delay between retries in ms. `0` disables delay.
+  - `options.backoffFactor` (Number): Multiplier applied per attempt. `1` keeps delay constant; `2` doubles each retry.
+- **Returns:** The first non-throwing result of `callFn`.
+- **Throws:** The last error after `maxAttempts` failures.
 
-### randomElement(obj)
-
-Returns a random element from an array or object.
-
-- **Parameters:**
-  - `obj` (Array|Object): Collection to select from
-- **Returns:** Random element
-
-### indexByTime(index)
-
-Returns an index value modified based on current hour and minute.
-
-- **Parameters:**
-  - `index` (Number): Base index value
-- **Returns:** Modified index value (0-9)
-
-### waitForProperty(obj, propertyName, timeout = 5000, interval = 100)
-
-Waits for a property to appear on an object within a timeout period.
-
-- **Parameters:**
-  - `obj` (Object): Object to watch
-  - `propertyName` (String): Property name to wait for
-  - `timeout` (Number): Maximum time to wait in milliseconds (default: 5000)
-  - `interval` (Number): Check interval in milliseconds (default: 100)
-- **Returns:** Promise that resolves when property appears or rejects on timeout
-
-### findKeyNode(key, node, pair = null)
-
-Recursively searches for a key in an object tree.
-
-- **Parameters:**
-  - `key` (String): Key to find
-  - `node` (Object): Object to search in
-  - `pair` (Any): Optional value to match with the key
-- **Returns:** Node containing the key or null
-
-### checkEmpty(value)
-
-Checks if a value is empty (including zero for numbers).
-
-- **Parameters:**
-  - `value` (Any): Value to check
-- **Returns:** Boolean indicating if value is empty
-
-### parseNumFromObj(obj)
-
-Converts string numbers to actual numbers in an object.
-
-- **Parameters:**
-  - `obj` (Object): Object to process
-- **Returns:** Processed object
-
-### parseIntFromObj(obj)
-
-Converts string integers to actual integers in an object.
-
-- **Parameters:**
-  - `obj` (Object): Object to process
-- **Returns:** Processed object
-
-### objectStringify(obj)
-
-Converts all values in an object to strings.
-
-- **Parameters:**
-  - `obj` (Object): Object to convert
-- **Returns:** Object with string values
-
-### flipObject(obj)
-
-Swaps keys and values of an object.
-
-- **Parameters:**
-  - `obj` (Object): Object to flip
-- **Returns:** New object with keys and values swapped
-
-### shuffleObject(obj)
-
-Randomly shuffles the order of key-value pairs in an object.
-
-- **Parameters:**
-  - `obj` (Object): Object to shuffle
-- **Returns:** New object with shuffled order
-
-### modifyObjectKeys(obj, callFn)
-
-Transforms all keys in an object using a callback function.
-
-- **Parameters:**
-  - `obj` (Object): Object to transform
-  - `callFn` (Function): Function to apply to each key
-- **Returns:** New object with transformed keys
+## Strings
 
 ### isValidURL(url)
 
-Checks if a string is a valid URL.
+Tests whether the input parses as a valid URL via the `URL` constructor.
 
 - **Parameters:**
-  - `url` (String): URL to validate
-- **Returns:** Boolean indicating URL validity
+  - `url` (String): Candidate URL.
+- **Returns:** `Boolean`.
+
+### splitTrim(string, separator = null)
+
+Splits a string, trims each piece, and drops empty results. Default separator is `\r?\n` (any newline).
+
+- **Parameters:**
+  - `string` (String): Source text.
+  - `separator` (String|RegExp|null): Custom delimiter; `null` falls back to newlines.
+- **Returns:** Array of non-empty trimmed strings.
+
+### pascalCase(string)
+
+Converts arbitrary text to `PascalCase` (uses lodash internally).
+
+- **Parameters:**
+  - `string` (String): Input text.
+- **Returns:** PascalCase string.
+
+### titleCase(string, separator = " ")
+
+Capitalizes the first letter of each word delimited by `separator`. Other characters are preserved as-is.
+
+- **Parameters:**
+  - `string` (String): Input text.
+  - `separator` (String): Word boundary. Defaults to a single space.
+- **Returns:** Title-cased string.
+
+### limitString(string, limit = 35, omission = "...")
+
+Truncates a string if it exceeds `limit` characters and appends `omission`. Strings shorter than the limit are returned unchanged.
+
+- **Parameters:**
+  - `string` (String): Input text.
+  - `limit` (Number): Maximum length of the result (including `omission`).
+  - `omission` (String): Suffix used when truncation happens.
+- **Returns:** Possibly truncated string.
+
+### safeString(string)
+
+Strips HTML tags via the `xss` library and additionally removes the body of dangerous block tags (`<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>`, `<form>`) so leftover CSS/markup cannot leak as text. CSS attribute sanitization is also disabled (no `<style>` attribute support). Intended for rendering untrusted text safely; not a substitute for a full HTML sanitizer like DOMPurify.
+
+- **Parameters:**
+  - `string` (String): Untrusted text.
+- **Returns:** Sanitized string with no allowed tags.
+
+### shuffleString(string)
+
+Randomly reorders the characters in a string using lodash's `shuffle` (Fisher-Yates).
+
+- **Parameters:**
+  - `string` (String): Source string.
+- **Returns:** Shuffled string of the same length.
+
+## Random (non-cryptographic, Math.random)
+
+### randomBoolean()
+
+Returns `true` or `false` with roughly equal probability.
+
+- **Returns:** `Boolean`.
+
+### randomString(length, useNumbers = true, useUppercase = false)
+
+Generates a non-secure random string from configurable character sets.
+
+- **Parameters:**
+  - `length` (Number): Output length.
+  - `useNumbers` (Boolean): Include digits `0-9`.
+  - `useUppercase` (Boolean): Include uppercase letters.
+- **Returns:** Random string.
+
+### randomHex(length)
+
+Generates a non-secure random hexadecimal string.
+
+- **Parameters:**
+  - `length` (Number): Output length.
+- **Returns:** Hex string of the requested length.
+
+### randomInteger(min, max)
+
+Returns an integer in `[min, max)`. If called with a single argument it is treated as `max` with `min = 0` (e.g., `randomInteger(10)` returns `0..9`).
+
+- **Parameters:**
+  - `min` (Number): Inclusive lower bound, or `max` when called with one argument.
+  - `max` (Number): Exclusive upper bound.
+- **Returns:** Integer in `[min, max)`.
+- **Throws:** When inputs are not numbers, or when `max <= min`.
+
+### randomUuid(useDashes = true)
+
+Generates a non-secure UUID v4-shaped string. Sufficient for client-side keys; do not use for security tokens.
+
+- **Parameters:**
+  - `useDashes` (Boolean): When `false`, dashes are stripped.
+- **Returns:** UUID string.
+
+### randomWeighted(object)
+
+Picks a key from `object` with probability proportional to its numeric value.
+
+- **Parameters:**
+  - `object` (Object): Map of key → positive weight.
+- **Returns:** Selected key.
+
+### randomElement(object)
+
+Picks a random value from an array or from an object's own enumerable values. Returns `undefined` for empty or nullish input.
+
+- **Parameters:**
+  - `object` (Array|Object): Source collection.
+- **Returns:** A random value, or `undefined`.
+
+## Deterministic Random (seeded)
+
+### mulberry32(seed)
+
+Returns a deterministic PRNG (Mulberry32) seeded by a 32-bit integer or by a string (hashed internally to 32 bits). Each call to the returned function produces a `[0, 1)` float. Very fast, but only 32 bits of state — not for cryptographic use.
+
+- **Parameters:**
+  - `seed` (Number|String): Seed value.
+- **Returns:** Function that returns a `Number` in `[0, 1)` per call.
+
+### seedHex(seed, length)
+
+Builds a deterministic hex string of the requested length from a seed via `mulberry32`. Same seed always yields the same output. Useful for short, repeatable identifiers (e.g., proxy session stickiness).
+
+- **Parameters:**
+  - `seed` (Any): Seed value (coerced to string).
+  - `length` (Number): Output length in hex characters. Required.
+- **Returns:** Hex string.
+
+## Predicates
+
+### checkEmpty(value)
+
+Like lodash's `isEmpty` but additionally treats `0` (numeric zero) as empty.
+
+- **Parameters:**
+  - `value` (Any): Value to test.
+- **Returns:** `Boolean`.
 
 ### isInt32(value)
 
-Checks if a value is a valid 32-bit integer.
+Tests whether `value` is an integer within the signed 32-bit range.
 
 - **Parameters:**
-  - `value` (Any): Value to check
-- **Returns:** Boolean indicating if value is a 32-bit integer
+  - `value` (Any): Value to test.
+- **Returns:** `Boolean`.
 
-### cookieDict(res, decodeValues = false)
+### isPositiveNumber(value)
 
-Converts response cookies to a object.
-
-- **Parameters:**
-  - `res` (Response): Response object with cookies
-  - `decodeValues` (Boolean): Whether to decode cookie values
-- **Returns:** Object with cookie name-value pairs
-
-### cookieHeader(cookieDict)
-
-Converts a cookie dictionary to a cookie header string.
+Tests whether `value` is a finite positive number (excludes `NaN`, `Infinity`, non-numbers, `0`, and negatives).
 
 - **Parameters:**
-  - `cookieDict` (Object): Cookie name-value pairs
-- **Returns:** Cookie header string
+  - `value` (Any): Value to test.
+- **Returns:** `Boolean`.
 
-### cookieStringToObject(cookieString)
+## Objects
 
-Parses a cookie header string into an object of key-value pairs.
+### coerceObjectNumbers(object)
 
-- **Parameters:**
-  - `cookieString` (String): Cookie string
-- **Returns:** Object with cookie name-value pairs
-
-### isIntlHttpCode(httpCode)
-
-Checks if an HTTP code is likely to be an internal issue.
+Walks an object's own enumerable keys and converts string values that match a numeric pattern (e.g., `"1.5"`, `"-3"`, `"1e3"`) to `Number`. Non-string values and non-strict numeric strings (e.g., `"12abc"`, `"1,000"`) are left untouched. Mutates the input.
 
 - **Parameters:**
-  - `httpCode` (Number): HTTP status code
-- **Returns:** Boolean indicating if code is internal
+  - `object` (Object): Object to coerce in place.
+- **Returns:** The same `object`.
 
-### isIntlHttpError(e)
+### coerceObjectIntegers(object)
 
-Checks if an HTTP error is likely to be an internal issue.
-
-- **Parameters:**
-  - `e` (Error): Error object
-- **Returns:** Boolean indicating if error is internal
-
-### getResponseError(e, limit = 115)
-
-Extracts a concise error message from an HTTP error response.
+Same as `coerceObjectNumbers` but only converts whole integer strings via `parseInt` (e.g., `"002"` → `2`, `"-7"` → `-7`). Mutates the input.
 
 - **Parameters:**
-  - `e` (Error): Error object with optional response data
-  - `limit` (Number): Maximum length of the error string (default: 115)
-- **Returns:** Trimmed error string
+  - `object` (Object): Object to coerce in place.
+- **Returns:** The same `object`.
+
+### findNodeByKey(key, node, pair = null)
+
+Depth-first search through a nested object for the first node that owns `key`. If `pair` is provided, the node's value at `key` must equal `pair` (strict equality, supports falsy values like `false` / `0` / `""`).
+
+- **Parameters:**
+  - `key` (String): Property name to find.
+  - `node` (Object): Tree to search.
+  - `pair` (Any): Optional value constraint. `null` means "match any value".
+- **Returns:** The matching node, or `null` if not found.
+
+### waitForProperty(object, property, timeout = 5000, interval = 100)
+
+Polls `object` until it owns `property`, then resolves with the property's value. Rejects after `timeout` milliseconds.
+
+- **Parameters:**
+  - `object` (Object): Object to watch.
+  - `property` (String): Property name to wait for.
+  - `timeout` (Number): Maximum wait time in milliseconds.
+  - `interval` (Number): Poll interval in milliseconds.
+- **Returns:** `Promise` resolving to the property's value.
+- **Throws:** When the property does not appear within `timeout`.
+
+### shuffleObject(object)
+
+Returns a new object whose entries are in random order (the underlying iteration order is the only thing being shuffled).
+
+- **Parameters:**
+  - `object` (Object): Source object.
+- **Returns:** New object with the same keys/values in shuffled order.
+
+### objectStringify(object)
+
+Recursively walks an object and converts every leaf value to `String(value)`. Nested objects and arrays are descended into; mutates the input.
+
+- **Parameters:**
+  - `object` (Object): Object to mutate.
+- **Returns:** The same `object`.
+
+## Cookies
+
+### cookiesFromResponse(response, decodeValues = false)
+
+Parses the `Set-Cookie` headers off a response-like object (compatible with Node `http`, fetch responses, or anything with `headers["set-cookie"]`) and returns a flat `{name: value}` map via `set-cookie-parser`.
+
+- **Parameters:**
+  - `response` (Object): Response-like with parsed headers.
+  - `decodeValues` (Boolean): Whether to URL-decode cookie values.
+- **Returns:** Map of cookie name → value.
+
+### cookiesToHeader(cookies)
+
+Serializes a `{name: value}` map into a `Cookie:` header string (`name=value` pairs joined with `"; "`). Null/undefined values are dropped.
+
+- **Parameters:**
+  - `cookies` (Object): Map of cookie name → value.
+- **Returns:** Cookie header string, or `""` for empty/missing input.
+
+### cookiesFromHeader(header)
+
+Parses a single `Cookie:` header string into a `{name: value}` map. Pieces without `=` are skipped; multiple `=` inside a value are preserved.
+
+- **Parameters:**
+  - `header` (String): Cookie header value.
+- **Returns:** Map of cookie name → value. Empty input returns `{}`.
+
+## HTTP Helpers
+
+### isTransientHttpCode(httpCode)
+
+Flags HTTP status codes that are typically transient or worth retrying (missing/`NaN`, `100`, `402`, `407`, `460-469`, anything `≥ 500`).
+
+- **Parameters:**
+  - `httpCode` (Number|null|undefined): Status code to inspect.
+- **Returns:** `Boolean`.
+
+### getResponseError(error, limit = 200)
+
+Extracts a short error description from an HTTP error-like object. Prefers `error.response.status|error.response.data`, then `error.response.data`, then `error.message`. Truncates the result to `limit` characters via `limitString`.
+
+- **Parameters:**
+  - `error` (Error): Error from an HTTP client.
+  - `limit` (Number): Maximum length of the returned string.
+- **Returns:** Trimmed error description.

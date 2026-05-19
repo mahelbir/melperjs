@@ -10,36 +10,36 @@ import {
     sleep,
     promiseTimeout,
     promiseSilent,
-    retryFn,
+    retry,
     isValidURL,
-    splitClear,
+    splitTrim,
     checkEmpty,
     pascalCase,
     titleCase,
     isInt32,
-    parseNumFromObj,
-    parseIntFromObj,
-    findKeyNode,
+    isPositiveNumber,
+    coerceObjectNumbers,
+    coerceObjectIntegers,
+    findNodeByKey,
     waitForProperty,
-    flipObject,
     shuffleObject,
     objectStringify,
-    modifyObjectKeys,
     limitString,
     safeString,
     shuffleString,
+    randomBoolean,
     randomString,
     randomHex,
     randomInteger,
     randomUuid,
     randomWeighted,
     randomElement,
-    indexByTime,
-    cookieDict,
-    cookieHeader,
-    cookieStringToObject,
-    isIntlHttpCode,
-    isIntlHttpError,
+    mulberry32,
+    seedHex,
+    cookiesFromResponse,
+    cookiesToHeader,
+    cookiesFromHeader,
+    isTransientHttpCode,
     getResponseError
 } from "../src/index.js";
 
@@ -57,12 +57,12 @@ describe("CONSTANTS", () => {
 
 
 describe("Exception", () => {
-    it("returns an Error with default name and status", () => {
+    it("returns an Error with default name and empty response", () => {
         const err = Exception("boom");
         assert.ok(err instanceof Error);
         assert.equal(err.message, "boom");
         assert.equal(err.name, "Exception");
-        assert.deepEqual(err.response, {status: 400});
+        assert.deepEqual(err.response, {});
     });
 
     it("honors custom name and response", () => {
@@ -72,9 +72,10 @@ describe("Exception", () => {
         assert.equal(err.response.data, "x");
     });
 
-    it("resets empty response and adds default status", () => {
-        const err = Exception("e", {});
-        assert.deepEqual(err.response, {status: 400});
+    it("normalizes empty or nullish response to {}", () => {
+        assert.deepEqual(Exception("e", null).response, {});
+        assert.deepEqual(Exception("e", undefined).response, {});
+        assert.deepEqual(Exception("e", {}).response, {});
     });
 });
 
@@ -125,10 +126,10 @@ describe("promiseTimeout / promiseSilent", () => {
 });
 
 
-describe("retryFn", () => {
+describe("retry", () => {
     it("returns the first successful result", async () => {
         let calls = 0;
-        const result = await retryFn(async () => {
+        const result = await retry(async () => {
             calls++;
             if (calls < 2) throw new Error("fail");
             return "ok";
@@ -137,10 +138,10 @@ describe("retryFn", () => {
         assert.equal(calls, 2);
     });
 
-    it("invokes errorFn on each failure and rethrows after retries are exhausted", async () => {
+    it("invokes errorFn on each failure and rethrows after attempts are exhausted", async () => {
         const errors = [];
         await assert.rejects(
-            retryFn(
+            retry(
                 async () => {throw new Error("nope");},
                 3,
                 (attempt, error) => errors.push([attempt, error.message])
@@ -149,6 +150,23 @@ describe("retryFn", () => {
         );
         assert.equal(errors.length, 3);
         assert.deepEqual(errors[0], [1, "nope"]);
+    });
+
+    it("waits delayMs between attempts but not after the last", async () => {
+        const start = Date.now();
+        await assert.rejects(retry(async () => {throw new Error("x");}, 3, null, {delayMs: 30}));
+        const elapsed = Date.now() - start;
+        assert.ok(elapsed >= 55, `expected >=55ms, got ${elapsed}ms`);
+        assert.ok(elapsed < 120, `expected <120ms, got ${elapsed}ms`);
+    });
+
+    it("applies exponential backoff when backoffFactor > 1", async () => {
+        // 4 attempts, delayMs=10, factor=2 → delays of 10, 20, 40 = 70ms total
+        const start = Date.now();
+        await assert.rejects(retry(async () => {throw new Error("x");}, 4, null, {delayMs: 10, backoffFactor: 2}));
+        const elapsed = Date.now() - start;
+        assert.ok(elapsed >= 65, `expected >=65ms, got ${elapsed}ms`);
+        assert.ok(elapsed < 130, `expected <130ms, got ${elapsed}ms`);
     });
 });
 
@@ -166,14 +184,14 @@ describe("isValidURL", () => {
 });
 
 
-describe("splitClear", () => {
+describe("splitTrim", () => {
     it("splits on newlines and trims/filters empty lines by default", () => {
-        const result = splitClear("\n  a  \n\n  b  \n");
+        const result = splitTrim("\n  a  \n\n  b  \n");
         assert.deepEqual(result, ["a", "b"]);
     });
 
     it("accepts a custom separator", () => {
-        assert.deepEqual(splitClear("a, b,  ,c", ","), ["a", "b", "c"]);
+        assert.deepEqual(splitTrim("a, b,  ,c", ","), ["a", "b", "c"]);
     });
 });
 
@@ -219,41 +237,72 @@ describe("isInt32", () => {
 });
 
 
-describe("parseNumFromObj / parseIntFromObj", () => {
-    it("parseNumFromObj converts numeric strings to numbers in place", () => {
-        const obj = {a: "1.5", b: "2", c: "x", d: "1_000", e: 3};
-        const result = parseNumFromObj(obj);
+describe("isPositiveNumber", () => {
+    it("accepts positive finite numbers", () => {
+        assert.equal(isPositiveNumber(1), true);
+        assert.equal(isPositiveNumber(0.0001), true);
+        assert.equal(isPositiveNumber(Number.MAX_SAFE_INTEGER), true);
+    });
+
+    it("rejects zero, negatives, NaN, Infinity, strings and nullish values", () => {
+        assert.equal(isPositiveNumber(0), false);
+        assert.equal(isPositiveNumber(-1), false);
+        assert.equal(isPositiveNumber(NaN), false);
+        assert.equal(isPositiveNumber(Infinity), false);
+        assert.equal(isPositiveNumber("5"), false);
+        assert.equal(isPositiveNumber(null), false);
+        assert.equal(isPositiveNumber(undefined), false);
+    });
+});
+
+
+describe("coerceObjectNumbers / coerceObjectIntegers", () => {
+    it("coerceObjectNumbers converts strict numeric strings to numbers in place", () => {
+        const obj = {a: "1.5", b: "2", c: "x", d: "1_000", e: 3, f: "002", g: "1,000", h: "12abc", i: "0xFF"};
+        const result = coerceObjectNumbers(obj);
         assert.strictEqual(result, obj);
         assert.equal(obj.a, 1.5);
         assert.equal(obj.b, 2);
         assert.equal(obj.c, "x");
         assert.equal(obj.d, "1_000");
         assert.equal(obj.e, 3);
+        assert.equal(obj.f, 2);
+        assert.equal(obj.g, "1,000");
+        assert.equal(obj.h, "12abc");
+        assert.equal(obj.i, "0xFF");
     });
 
-    it("parseIntFromObj only converts exact integer strings", () => {
-        const obj = {a: "5", b: "1.5", c: "x"};
-        parseIntFromObj(obj);
+    it("coerceObjectIntegers only converts whole integer strings (zero-padded allowed)", () => {
+        const obj = {a: "5", b: "1.5", c: "x", d: "002", e: "-7", f: "12abc"};
+        coerceObjectIntegers(obj);
         assert.equal(obj.a, 5);
         assert.equal(obj.b, "1.5");
         assert.equal(obj.c, "x");
+        assert.equal(obj.d, 2);
+        assert.equal(obj.e, -7);
+        assert.equal(obj.f, "12abc");
     });
 });
 
 
-describe("findKeyNode", () => {
+describe("findNodeByKey", () => {
     it("returns the nearest node containing the given key", () => {
         const tree = {a: {b: {c: 1, target: "x"}}};
-        assert.deepEqual(findKeyNode("target", tree), {c: 1, target: "x"});
+        assert.deepEqual(findNodeByKey("target", tree), {c: 1, target: "x"});
     });
 
     it("matches by key/value pair when provided", () => {
         const tree = {a: {flag: false}, b: {flag: true}};
-        assert.deepEqual(findKeyNode("flag", tree, true), {flag: true});
+        assert.deepEqual(findNodeByKey("flag", tree, true), {flag: true});
+    });
+
+    it("matches falsy pair values (false / 0 / empty string)", () => {
+        assert.deepEqual(findNodeByKey("flag", {a: {flag: true}, b: {flag: false}}, false), {flag: false});
+        assert.deepEqual(findNodeByKey("count", {a: {count: 3}, b: {count: 0}}, 0), {count: 0});
     });
 
     it("returns null when nothing matches", () => {
-        assert.equal(findKeyNode("missing", {a: 1}), null);
+        assert.equal(findNodeByKey("missing", {a: 1}), null);
     });
 });
 
@@ -271,11 +320,7 @@ describe("waitForProperty", () => {
 });
 
 
-describe("flipObject / shuffleObject", () => {
-    it("flipObject swaps keys and values", () => {
-        assert.deepEqual(flipObject({a: 1, b: 2}), {1: "a", 2: "b"});
-    });
-
+describe("shuffleObject", () => {
     it("shuffleObject preserves keys and values", () => {
         const input = {a: 1, b: 2, c: 3, d: 4};
         const shuffled = shuffleObject(input);
@@ -293,15 +338,6 @@ describe("objectStringify", () => {
         assert.equal(obj.a, "1");
         assert.equal(obj.b.c, "true");
         assert.equal(obj.b.d, "null");
-    });
-});
-
-
-describe("modifyObjectKeys", () => {
-    it("applies the transform to each top-level key", () => {
-        const input = {hello_world: 1, foo_bar: 2};
-        const result = modifyObjectKeys(input, pascalCase);
-        assert.deepEqual(result, {HelloWorld: 1, FooBar: 2});
     });
 });
 
@@ -337,6 +373,19 @@ describe("shuffleString", () => {
 });
 
 
+describe("randomBoolean", () => {
+    it("returns a boolean", () => {
+        assert.equal(typeof randomBoolean(), "boolean");
+    });
+
+    it("produces both values across many samples", () => {
+        const seen = new Set();
+        for (let i = 0; i < 200 && seen.size < 2; i++) seen.add(randomBoolean());
+        assert.equal(seen.size, 2);
+    });
+});
+
+
 describe("randomString / randomHex", () => {
     it("randomString respects the requested length and default charset", () => {
         const s = randomString(20);
@@ -366,7 +415,7 @@ describe("randomString / randomHex", () => {
 
 
 describe("randomInteger", () => {
-    it("returns a number in [min, max) when called synchronously", () => {
+    it("returns an integer in [min, max)", () => {
         for (let i = 0; i < 100; i++) {
             const n = randomInteger(5, 10);
             assert.ok(n >= 5 && n < 10);
@@ -379,12 +428,6 @@ describe("randomInteger", () => {
             const n = randomInteger(5);
             assert.ok(n >= 0 && n < 5);
         }
-    });
-
-    it("invokes the callback when given one", () => {
-        let received;
-        randomInteger(1, 3, (n) => {received = n;});
-        assert.ok(received >= 1 && received < 3);
     });
 
     it("throws on invalid input", () => {
@@ -409,18 +452,11 @@ describe("randomUuid", () => {
 
 
 describe("randomWeighted", () => {
-    it("returns one of the dictionary keys", () => {
+    it("can return every key in an equally weighted dict", () => {
         const dict = {a: 1, b: 1, c: 1};
-        for (let i = 0; i < 50; i++) {
-            assert.ok(["a", "b", "c"].includes(randomWeighted(dict)));
-        }
-    });
-
-    it("uses the provided random function deterministically", () => {
-        const dict = {a: 1, b: 2, c: 1};
-        assert.equal(randomWeighted(dict, () => 0.5), "a");
-        assert.equal(randomWeighted(dict, () => 2.5), "b");
-        assert.equal(randomWeighted(dict, () => 3.5), "c");
+        const seen = new Set();
+        for (let i = 0; i < 200 && seen.size < 3; i++) seen.add(randomWeighted(dict));
+        assert.equal(seen.size, 3);
     });
 });
 
@@ -439,84 +475,110 @@ describe("randomElement", () => {
             assert.ok([1, 2, 3].includes(randomElement(obj)));
         }
     });
-});
 
-
-describe("indexByTime", () => {
-    it("returns an integer in [0, 9]", () => {
-        const result = indexByTime(0);
-        assert.ok(Number.isInteger(result));
-        assert.ok(result >= 0 && result <= 9);
+    it("returns undefined for empty/missing input", () => {
+        assert.equal(randomElement([]), undefined);
+        assert.equal(randomElement({}), undefined);
+        assert.equal(randomElement(null), undefined);
+        assert.equal(randomElement(undefined), undefined);
     });
 });
 
 
-describe("cookieDict / cookieHeader / cookieStringToObject", () => {
-    it("cookieDict parses set-cookie headers into a flat name/value map", () => {
+describe("mulberry32", () => {
+    it("returns a deterministic PRNG seeded by int", () => {
+        const a = mulberry32(42);
+        const b = mulberry32(42);
+        const c = mulberry32(99);
+        assert.equal(a(), b());
+        assert.equal(a(), b());
+        assert.notEqual(mulberry32(42)(), c());
+    });
+
+    it("accepts a string seed", () => {
+        assert.equal(mulberry32("abc")(), mulberry32("abc")());
+        assert.notEqual(mulberry32("abc")(), mulberry32("xyz")());
+    });
+
+    it("returns floats in [0, 1)", () => {
+        const rng = mulberry32("test");
+        for (let i = 0; i < 50; i++) {
+            const v = rng();
+            assert.ok(v >= 0 && v < 1);
+        }
+    });
+});
+
+
+describe("seedHex", () => {
+    it("returns deterministic hex of requested length", () => {
+        assert.equal(seedHex("abc", 8), seedHex("abc", 8));
+        assert.equal(seedHex("abc", 8).length, 8);
+        assert.match(seedHex("abc", 8), /^[0-9a-f]+$/);
+    });
+
+    it("respects the length parameter", () => {
+        assert.equal(seedHex("abc", 16).length, 16);
+        assert.equal(seedHex("abc", 32).length, 32);
+        assert.equal(seedHex("abc", 1).length, 1);
+    });
+
+    it("produces different output for different seeds", () => {
+        assert.notEqual(seedHex("a", 8), seedHex("b", 8));
+    });
+});
+
+
+describe("cookiesFromResponse / cookiesToHeader / cookiesFromHeader", () => {
+    it("cookiesFromResponse parses set-cookie headers into a flat name/value map", () => {
         const res = {headers: {"set-cookie": ["a=1; Path=/", "b=2; Path=/"]}};
-        assert.deepEqual(cookieDict(res), {a: "1", b: "2"});
+        assert.deepEqual(cookiesFromResponse(res), {a: "1", b: "2"});
     });
 
-    it("cookieHeader serializes a map into a cookie header string", () => {
-        assert.equal(cookieHeader({a: "1", b: "2"}), "a=1;b=2");
+    it("cookiesToHeader serializes a map into a cookie header string", () => {
+        assert.equal(cookiesToHeader({a: "1", b: "2"}), "a=1; b=2");
     });
 
-    it("cookieStringToObject parses a cookie header into an object", () => {
-        assert.deepEqual(cookieStringToObject("a=1; b=2; c="), {a: "1", b: "2", c: ""});
+    it("cookiesToHeader filters null/undefined values and tolerates empty input", () => {
+        assert.equal(cookiesToHeader({a: "1", b: null, c: undefined, d: ""}), "a=1; d=");
+        assert.equal(cookiesToHeader(undefined), "");
+        assert.equal(cookiesToHeader(null), "");
     });
 
-    it("cookieStringToObject returns an empty object for empty input", () => {
-        assert.deepEqual(cookieStringToObject(""), {});
-        assert.deepEqual(cookieStringToObject(null), {});
+    it("cookiesFromHeader parses a cookie header into an object", () => {
+        assert.deepEqual(cookiesFromHeader("a=1; b=2; c="), {a: "1", b: "2", c: ""});
     });
 
-    it("cookieStringToObject keeps '=' inside values", () => {
-        assert.deepEqual(cookieStringToObject("token=a=b=c"), {token: "a=b=c"});
+    it("cookiesFromHeader returns an empty object for empty input", () => {
+        assert.deepEqual(cookiesFromHeader(""), {});
+        assert.deepEqual(cookiesFromHeader(null), {});
+    });
+
+    it("cookiesFromHeader keeps '=' inside values", () => {
+        assert.deepEqual(cookiesFromHeader("token=a=b=c"), {token: "a=b=c"});
     });
 });
 
 
-describe("isIntlHttpCode", () => {
+describe("isTransientHttpCode", () => {
     it("flags missing or transient codes", () => {
-        assert.equal(isIntlHttpCode(undefined), true);
-        assert.equal(isIntlHttpCode(null), true);
-        assert.equal(isIntlHttpCode(0), true);
-        assert.equal(isIntlHttpCode(100), true);
-        assert.equal(isIntlHttpCode(402), true);
-        assert.equal(isIntlHttpCode(407), true);
-        assert.equal(isIntlHttpCode(417), true);
-        assert.equal(isIntlHttpCode(460), true);
-        assert.equal(isIntlHttpCode(469), true);
-        assert.equal(isIntlHttpCode(500), true);
-        assert.equal(isIntlHttpCode(503), true);
+        assert.equal(isTransientHttpCode(undefined), true);
+        assert.equal(isTransientHttpCode(null), true);
+        assert.equal(isTransientHttpCode(0), true);
+        assert.equal(isTransientHttpCode(100), true);
+        assert.equal(isTransientHttpCode(402), true);
+        assert.equal(isTransientHttpCode(407), true);
+        assert.equal(isTransientHttpCode(460), true);
+        assert.equal(isTransientHttpCode(469), true);
+        assert.equal(isTransientHttpCode(500), true);
+        assert.equal(isTransientHttpCode(503), true);
     });
 
     it("treats normal 2xx/3xx/4xx codes as not transient", () => {
-        assert.equal(isIntlHttpCode(200), false);
-        assert.equal(isIntlHttpCode(301), false);
-        assert.equal(isIntlHttpCode(404), false);
-        assert.equal(isIntlHttpCode(470), false);
-    });
-});
-
-
-describe("isIntlHttpError", () => {
-    it("matches known transient error messages", () => {
-        assert.equal(isIntlHttpError(new Error("Timeout exceeded")), true);
-        assert.equal(isIntlHttpError(new Error("socket hang up")), true);
-        assert.equal(isIntlHttpError(new Error("Proxy connection failed")), true);
-        assert.equal(isIntlHttpError(new Error("aborted")), true);
-        assert.equal(isIntlHttpError(new Error("TLS connection error")), true);
-    });
-
-    it("matches by response.status", () => {
-        assert.equal(isIntlHttpError({response: {status: 500}}), true);
-        assert.equal(isIntlHttpError({response: {status: 404}}), false);
-    });
-
-    it("returns false when the response carries a non-transient status", () => {
-        assert.equal(isIntlHttpError({message: "bad request", response: {status: 200}}), false);
-        assert.equal(isIntlHttpError({message: "not found", response: {status: 404}}), false);
+        assert.equal(isTransientHttpCode(200), false);
+        assert.equal(isTransientHttpCode(301), false);
+        assert.equal(isTransientHttpCode(404), false);
+        assert.equal(isTransientHttpCode(470), false);
     });
 });
 

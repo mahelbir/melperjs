@@ -1,237 +1,285 @@
 # Node.js Functions
 
-This document provides information about the Node.js specific functions available in the node module (`melperjs/node`).
+Node-only utilities exported from `melperjs/node`. These rely on Node modules (`crypto`, `fs`, `child_process`, `os`)
+and will not run in a browser.
 
-### tokenBoolean()
+## Cryptographic Random (CSPRNG)
 
-Generates a cryptographically secure random boolean.
+All `secureRandom*` helpers use Node's `crypto` module (`crypto.randomInt`, `crypto.randomBytes`, `crypto.randomUUID`).
+Use these for session tokens, API keys, nonces, and anything security-sensitive. For non-secure / faster equivalents,
+see the `random*` family in [General Functions](./general.md).
 
-- **Returns:** Random boolean value
+### secureRandomBoolean()
 
-### tokenString(length, useNumbers = true, useUppercase = false)
+Returns `true` or `false` with cryptographically uniform probability.
 
-Generates a cryptographically secure random string.
+- **Returns:** `Boolean`.
 
-- **Parameters:**
-  - `length` (Number): Length of the string to generate
-  - `useNumbers` (Boolean): Include numbers (default: true)
-  - `useUppercase` (Boolean): Include uppercase letters (default: false)
-- **Returns:** Secure random string
+### secureRandomString(length, useNumbers = true, useUppercase = false)
 
-### tokenHex(length)
-
-Generates a cryptographically secure random hexadecimal string.
+Generates a cryptographically random string from a configurable character set.
 
 - **Parameters:**
-  - `length` (Number): Length of the string to generate
-- **Returns:** Secure random hex string
+    - `length` (Number): Output length.
+    - `useNumbers` (Boolean): Include digits `0-9`.
+    - `useUppercase` (Boolean): Include uppercase letters.
+- **Returns:** Random string.
 
-### tokenInteger(min, max)
+### secureRandomHex(length)
 
-Generates a cryptographically secure random integer between min and max.
-
-- **Parameters:**
-  - `min` (Number): Minimum value (inclusive)
-  - `max` (Number): Maximum value (exclusive)
-- **Returns:** Secure random integer
-
-### tokenUuid(useDashes = true)
-
-Generates a cryptographically secure random UUID.
+Generates a cryptographically random hexadecimal string.
 
 - **Parameters:**
-  - `useDashes` (Boolean): Whether to include dashes (default: true)
-- **Returns:** Secure UUID string
+    - `length` (Number): Output length.
+- **Returns:** Hex string of the requested length.
 
-### tokenWeighted(dict)
+### secureRandomInteger(min, max)
 
-Returns a cryptographically secure random key based on weighted probabilities.
-
-- **Parameters:**
-  - `dict` (Object): Object with keys and their weights
-- **Returns:** Selected key
-
-### tokenElement(obj)
-
-Returns a cryptographically secure random element from an array or object.
+Returns a cryptographically random integer in `[min, max)`. Thin wrapper over `crypto.randomInt`.
 
 - **Parameters:**
-  - `obj` (Array|Object): Collection to select from
-- **Returns:** Random element
+    - `min` (Number): Inclusive lower bound.
+    - `max` (Number): Exclusive upper bound.
+- **Returns:** Integer in `[min, max)`.
 
-### seedUuid(seed)
+### secureRandomUuid(useDashes = true)
 
-Generates a deterministic UUID v4 from a seed string using MD5 hashing.
-
-- **Parameters:**
-  - `seed` (String): Seed value to generate UUID from
-- **Returns:** UUID string with dashes
-
-### executeCommand(command)
-
-Executes a shell command and returns the result.
+Generates a cryptographically random UUID v4 via `crypto.randomUUID()`. Suitable for security tokens.
 
 - **Parameters:**
-  - `command` (String): Shell command to execute
-- **Returns:** Promise that resolves with command output
+    - `useDashes` (Boolean): When `false`, dashes are stripped.
+- **Returns:** UUID string.
 
-### serverIp()
+### secureRandomWeighted(object)
 
-Returns the first non-loopback, non-internal IPv4 address from the host's network interfaces, skipping `127.0.0.1` and any address starting with `192.168.`. Falls back to `127.0.0.1` when no matching interface is found.
-
-- **Returns:** IPv4 address string
-
-### getVersion()
-
-Builds a version string from the UTC timestamp of the latest git commit (`git show -s --format=%ct HEAD`).
-
-- **Returns:** Version string in `YYMMDD.HHMM` format, or `"1.0"` when git is unavailable or the timestamp can't be parsed
-
-### createNumDir(mainDirectory, start = 0, end = 9)
-
-Creates a main directory with numbered subdirectories.
+Picks a key from `object` with probability proportional to its weight, using `crypto.randomInt` for selection. Weights
+must be positive integers.
 
 - **Parameters:**
-  - `mainDirectory` (String): Path to the main directory
-  - `start` (Number): First directory number to create (default: 0)
-  - `end` (Number): Last directory number to create (default: 9)
-- **Returns:** void
+    - `object` (Object): Map of key → positive integer weight.
+- **Returns:** Selected key.
 
-### readJsonFile(filePath, defaultValue = {})
+### secureRandomElement(object)
 
-Reads and parses a JSON file asynchronously.
-
-- **Parameters:**
-  - `filePath` (String): Path to JSON file
-  - `defaultValue` (Any): Value to return if file cannot be read (default: `{}`)
-- **Returns:** Promise that resolves with parsed JSON object or default value
-
-### readJsonFileSync(filePath, defaultValue = {})
-
-Reads and parses a JSON file synchronously.
+Picks a cryptographically random value from an array or from an object's own enumerable values. Returns `undefined` for
+empty or nullish input.
 
 - **Parameters:**
-  - `filePath` (String): Path to JSON file
-  - `defaultValue` (Any): Value to return if file cannot be read (default: `{}`)
-- **Returns:** Parsed JSON object or default value
+    - `object` (Array|Object): Source collection.
+- **Returns:** A random value, or `undefined`.
 
-### writeJsonFile(filePath, data)
+## Deterministic Random (seeded)
 
-Writes data to a JSON file asynchronously.
+### uuidFromSeed(seed, useDashes = true)
 
-- **Parameters:**
-  - `filePath` (String): Path to JSON file
-  - `data` (Object): Data to write
-- **Returns:** Promise that resolves when file is written
-
-### writeJsonFileSync(filePath, data)
-
-Writes data to a JSON file synchronously.
+Builds a deterministic UUID by MD5-hashing the seed and setting RFC 4122 v3 version/variant bits. Same seed always
+yields the same UUID. Use for stable identifiers derived from input data; do not use for unpredictability.
 
 - **Parameters:**
-  - `filePath` (String): Path to JSON file
-  - `data` (Object): Data to write
-- **Returns:** void
+    - `seed` (String|Buffer): Seed value hashed with MD5.
+    - `useDashes` (Boolean): When `false`, dashes are stripped.
+- **Returns:** UUID string.
 
-### cleanDirectory(directoryPath, keepDir = true)
-
-Recursively removes all files and subdirectories from a directory. When the directory does not exist and `keepDir = true`, it is created (the function does **not** create it when `keepDir = false`).
-
-- **Parameters:**
-  - `directoryPath` (String): Path to directory
-  - `keepDir` (Boolean): Whether to keep the root directory itself (default: true)
-- **Returns:** Promise that resolves when directory is cleaned (resolves to `true` when the directory existed, `undefined` when it was created from scratch)
+## Hashing
 
 ### hash(algorithm, data)
 
-Creates a hash using the specified algorithm.
+Computes a hex digest using any algorithm supported by Node's `crypto.createHash`.
 
 - **Parameters:**
-  - `algorithm` (String): Hash algorithm to use
-  - `data` (String): Data to hash
-- **Returns:** Hex string of hash
+    - `algorithm` (String): e.g., `"sha1"`, `"sha256"`, `"md5"`.
+    - `data` (String|Buffer): Input data.
+- **Returns:** Hex digest.
 
 ### md5(data)
 
-Creates an MD5 hash of data.
+Shortcut for `hash("md5", data)`.
 
-- **Parameters:**
-  - `data` (String): Data to hash
-- **Returns:** Hex string of MD5 hash
+- **Returns:** 32-char hex MD5 digest.
 
 ### sha256(data)
 
-Creates a SHA-256 hash of data.
+Shortcut for `hash("sha256", data)`.
 
-- **Parameters:**
-  - `data` (String): Data to hash
-- **Returns:** Hex string of SHA-256 hash
+- **Returns:** 64-char hex SHA-256 digest.
+
+## Encoding
 
 ### base64Encode(data)
 
-Encodes data to Base64 string.
+Encodes input to Base64. Strings are treated as UTF-8; pass a `Buffer` for binary data.
 
 - **Parameters:**
-  - `data` (String): Data to encode
-- **Returns:** Base64 encoded string
+    - `data` (String|Buffer): Input data.
+- **Returns:** Base64 string.
 
 ### base64Decode(data, encoding = 'utf8')
 
-Decodes a Base64 string.
+Decodes Base64 input to a string using the given output encoding.
 
 - **Parameters:**
-  - `data` (String): Base64 string to decode
-  - `encoding` (String): Output encoding (default: 'utf8')
-- **Returns:** Decoded string
+    - `data` (String): Base64 string.
+    - `encoding` (String): Buffer encoding for the result (`'utf8'`, `'hex'`, etc.).
+- **Returns:** Decoded string.
 
-### hashBcrypt(plainText, encryptionKey = "", rounds = 12)
+## Bcrypt (Passwords)
 
-Creates a bcrypt hash of text with optional encryption key.
+### bcryptHash(plainText, {key = "", strength = 12, preHash = true} = {})
 
-- **Parameters:**
-  - `plainText` (String): Text to hash
-  - `encryptionKey` (String): Additional encryption key (default: "")
-  - `rounds` (Number): Bcrypt salt rounds (default: 12)
-- **Returns:** Bcrypt hash string
-
-### verifyBcrypt(plainText, hash, encryptionKey = "")
-
-Verifies a plaintext against a bcrypt hash.
+Hashes plaintext with bcrypt. An optional pre-hash `key` (application-wide secret, sometimes called "pepper") is appended to the plaintext before hashing. `strength` controls the bcrypt cost factor. When `preHash` is `true` (default), the input is SHA-256-hashed first so that very long passwords (bcrypt silently truncates at 72 bytes) are handled safely and uniquely.
 
 - **Parameters:**
-  - `plainText` (String): Text to verify
-  - `hash` (String): Bcrypt hash to compare against
-  - `encryptionKey` (String): Additional encryption key (optional)
-- **Returns:** Boolean indicating if the hash matches
+    - `plainText` (String): Password or other secret to hash.
+    - `options.key` (String): Extra secret appended before hashing. Default `""`.
+    - `options.strength` (Number): bcrypt cost (rounds). Default `12`.
+    - `options.preHash` (Boolean): Pre-hash with SHA-256 before bcrypt. Default `true`. Disable only for back-compat with hashes generated without it.
+- **Returns:** Bcrypt hash string.
 
-### formatProxy(proxy, protocol = "http")
+### bcryptVerify(plainText, hash, {key = "", preHash = true} = {})
 
-Normalizes a proxy string into `protocol://[user:pass@]host:port` form.
+Verifies that `plainText` (with the same `key`) matches a previously generated bcrypt hash. `preHash` must match the value used during hashing.
 
-Accepted input shapes:
+- **Parameters:**
+    - `plainText` (String): Plaintext to verify.
+    - `hash` (String): Bcrypt hash from `bcryptHash`.
+    - `options.key` (String): Same `key` used during hashing.
+    - `options.preHash` (Boolean): Must match the `preHash` used for `bcryptHash`. Default `true`.
+- **Returns:** `Boolean` indicating match.
+
+## Proxy Helpers
+
+### normalizeProxy(proxy, protocol = "http")
+
+Normalizes a wide range of proxy formats into a canonical `protocol://[user:pass@]host:port` URL. Supports:
+
 - `host:port`
-- `host:port:user:pass` (reordered to `user:pass@host:port`)
-- `host:portStart:portEnd[:user:pass]` — picks a cryptographically random port in `[portStart, portEnd]` (inclusive)
-- `user:pass@host:port` (left untouched apart from the protocol prefix)
-- Any of the above prefixed with `scheme://` — the scheme overrides the `protocol` parameter
+- `host:port:user:pass` (auth appended)
+- `user:pass:host:port` (auth prepended; auto-detected via numeric port pattern)
+- `host:portStart:portEnd:user:pass` (random port in range, inclusive)
+- `user:pass:host:portStart:portEnd` (auth prepended, random port in range)
+- `user:pass@host:port`
+- `user:pass@host:portStart:portEnd` (random port in range)
+- Any of the above prefixed with `scheme://` (`http`, `https`, `socks5`, `socks5h`, …)
+
+Returns `null` for empty or non-string input. Does not crash on unparseable input — returns it as-is wrapped with
+`protocol://`.
 
 - **Parameters:**
-  - `proxy` (String): Proxy string to format
-  - `protocol` (String): Default protocol when the input has no `scheme://` prefix (default: `"http"`)
-- **Returns:** Formatted proxy string
+    - `proxy` (String): Source proxy string.
+    - `protocol` (String): Default protocol when none is present in the input.
+- **Returns:** Canonical proxy URL, or `null` when input is empty/missing.
 
-### proxyObject(...args)
+### parseProxy(proxy, protocol = "http")
 
-Converts a proxy string to a structured object.
-
-- **Parameters:**
-  - Same as `formatProxy`
-- **Returns:** Object with proxy components
-
-### proxyValue(proxies)
-
-Picks a cryptographically random proxy from a newline-separated list, runs it through `formatProxy`, and replaces any `{SESSION}` placeholder in the result with a random 8-char hex token (`tokenHex(8)`). Useful for sticky-session proxy pools where the username encodes a session id.
+Normalizes `proxy` via `normalizeProxy`, then decomposes it into structured fields. Returns `null` when normalization
+fails (empty input).
 
 - **Parameters:**
-  - `proxies` (String): Newline-separated list of proxies (blank lines are skipped via `splitClear`)
-- **Returns:** Formatted proxy string with `{SESSION}` resolved, or `null` when the list is empty
+    - `proxy` (String): Source proxy string.
+    - `protocol` (String): Default protocol when none is present in the input.
+- **Returns:** `{protocol, host, port, auth?: {username, password}}` or `null`.
+
+### proxyValue(rawProxy, replacements = {})
+
+Picks a random proxy from a newline-separated list, normalizes it, and applies placeholder substitution.
+
+`{SESSION}` is a built-in placeholder:
+
+- If `SESSION` is not provided, it is autofilled with a non-secure `randomHex(8)`.
+- If `SESSION` is a string, it is treated as a seed and replaced via `seedHex(seed, 8)` (deterministic).
+- If `SESSION` is a function, the function is called per invocation.
+
+Any other key in `replacements` is also substituted (`{KEY}` → value). For non-SESSION entries: functions are called,
+strings are used literally.
+
+- **Parameters:**
+    - `rawProxy` (String): Newline-separated proxy list.
+    - `replacements` (Object): Placeholder values keyed by placeholder name.
+- **Returns:** Final proxy URL string, or `null` if the list is empty.
+
+## File I/O (JSON)
+
+### readJsonFile(filePath, defaultValue = {})
+
+Asynchronously reads a JSON file and parses it. Returns `defaultValue` on any failure (missing file, malformed JSON,
+permission error).
+
+- **Parameters:**
+    - `filePath` (String): Path to JSON file.
+    - `defaultValue` (Any): Fallback when read or parse fails.
+- **Returns:** `Promise` resolving to parsed JSON or `defaultValue`.
+
+### readJsonFileSync(filePath, defaultValue = {})
+
+Synchronous version of `readJsonFile`.
+
+- **Parameters:**
+    - `filePath` (String): Path to JSON file.
+    - `defaultValue` (Any): Fallback when read or parse fails.
+- **Returns:** Parsed JSON or `defaultValue`.
+
+### writeJsonFile(filePath, data)
+
+Asynchronously writes `data` as JSON. Errors propagate to the caller.
+
+- **Parameters:**
+    - `filePath` (String): Destination path.
+    - `data` (Any): JSON-serializable value.
+- **Returns:** `Promise` that resolves once the file is written.
+
+### writeJsonFileSync(filePath, data)
+
+Synchronous version of `writeJsonFile`.
+
+- **Parameters:**
+    - `filePath` (String): Destination path.
+    - `data` (Any): JSON-serializable value.
+- **Returns:** `undefined`.
+
+## File System
+
+### createNumberedDirs(mainDirectory, start = 0, end = 9)
+
+Creates `mainDirectory` (recursive) and a numbered subdirectory for each integer in `[start, end]` (inclusive). Existing
+directories are kept.
+
+- **Parameters:**
+    - `mainDirectory` (String): Parent directory path.
+    - `start` (Number): First subdirectory index. Default `0`.
+    - `end` (Number): Last subdirectory index. Default `9`.
+- **Returns:** `undefined`.
+
+### clearDirectory(directoryPath, keepDir = true)
+
+Recursively removes all files and subdirectories under `directoryPath`. When `keepDir` is `true` (default), the root
+directory itself is preserved (created if missing); when `false`, the root is removed too.
+
+- **Parameters:**
+    - `directoryPath` (String): Directory to clear.
+    - `keepDir` (Boolean): Whether to keep (or recreate) the root directory.
+- **Returns:** `Promise<void>`.
+
+## Process & Network
+
+### executeCommand(command)
+
+Runs a shell command (promisified `child_process.exec`) and returns the trimmed stdout. Rejects only on a non-zero exit
+code; output on stderr alone does not reject.
+
+- **Parameters:**
+    - `command` (String): Shell command line.
+- **Returns:** `Promise<String>` with the command's stdout.
+- **Throws:** When the command exits with a non-zero code.
+
+### hostIp()
+
+Returns the first non-loopback, non-internal IPv4 address found in the host's network interfaces, skipping `127.0.0.1`
+and any address starting with `192.168.`. Falls back to `127.0.0.1` if none qualifies.
+
+- **Returns:** IPv4 address string.
+
+### gitVersion()
+
+Builds a version string from the UTC timestamp of the latest git commit in the current working directory.
+
+- **Returns:** `YYMMDD.HHMM` string, or `"1.0"` when git is unavailable or the timestamp cannot be parsed.
