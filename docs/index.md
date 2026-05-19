@@ -87,7 +87,7 @@ Calls `task` up to `maxAttempts` times, returning the first successful result. O
 - **Parameters:**
   - `task` (Function): Async function to attempt.
   - `maxAttempts` (Number): Total attempt count (1 = no retries). Default `1`.
-  - `onError` (Function): Called as `(attempt, error)` after each failed attempt.
+  - `onError` (Function): Called as `(error, attempt)` after each failed attempt.
   - `options.delayMs` (Number): Base delay between retries in ms. `0` disables delay.
   - `options.backoffFactor` (Number): Multiplier applied per attempt. `1` keeps delay constant; `2` doubles each retry.
 - **Returns:** The first non-throwing result of `task`.
@@ -288,7 +288,7 @@ Depth-first search through a nested object for the first node that owns `key`. I
   - `pair` (Any): Optional value constraint. `null` means "match any value".
 - **Returns:** The matching node, or `null` if not found.
 
-### waitForProperty(object, property, timeout = 5000, interval = 100)
+### waitForProperty(object, property, timeout, interval = 100)
 
 Polls `object` until it owns `property`, then resolves with the property's value. Rejects after `timeout` milliseconds.
 
@@ -361,3 +361,51 @@ Extracts a short error description from an HTTP error-like object. Prefers `erro
   - `error` (Error): Error from an HTTP client.
   - `limit` (Number): Maximum length of the returned string.
 - **Returns:** Trimmed error description.
+
+## Proxy Helpers
+
+### normalizeProxy(proxy, protocol = "http")
+
+Normalizes a wide range of proxy formats into a canonical `protocol://[user:pass@]host:port` URL. Supports:
+
+- `host:port`
+- `host:port:user:pass` (auth appended)
+- `user:pass:host:port` (auth prepended; auto-detected via numeric port pattern)
+- `host:portStart:portEnd:user:pass` (random port in range, inclusive)
+- `user:pass:host:portStart:portEnd` (auth prepended, random port in range)
+- `user:pass@host:port`
+- `user:pass@host:portStart:portEnd` (random port in range)
+- Any of the above prefixed with `scheme://` (`http`, `https`, `socks5`, `socks5h`, …)
+
+Returns `null` for empty or non-string input. Does not crash on unparseable input — returns it as-is wrapped with `protocol://`.
+
+- **Parameters:**
+  - `proxy` (String): Source proxy string.
+  - `protocol` (String): Default protocol when none is present in the input.
+- **Returns:** Canonical proxy URL, or `null` when input is empty/missing.
+
+### parseProxy(proxy, protocol = "http")
+
+Normalizes `proxy` via `normalizeProxy`, then decomposes it into structured fields. Returns `null` when normalization fails (empty input).
+
+- **Parameters:**
+  - `proxy` (String): Source proxy string.
+  - `protocol` (String): Default protocol when none is present in the input.
+- **Returns:** `{protocol, host, port, auth?: {username, password}}` or `null`.
+
+### proxyValue(rawProxy, replacements = {})
+
+Picks a random proxy from a newline-separated list, normalizes it, and applies placeholder substitution.
+
+`{SESSION}` is a built-in placeholder:
+
+- If `SESSION` is not provided, it is autofilled with a non-secure `randomHex(8)`.
+- If `SESSION` is a string, it is treated as a seed and replaced via `seedHex(seed, 8)` (deterministic).
+- If `SESSION` is a function, the function is called per invocation.
+
+Any other key in `replacements` is also substituted (`{KEY}` → value). For non-SESSION entries: functions are called, strings are used literally.
+
+- **Parameters:**
+  - `rawProxy` (String): Newline-separated proxy list.
+  - `replacements` (Object): Placeholder values keyed by placeholder name.
+- **Returns:** Final proxy URL string, or `null` if the list is empty.

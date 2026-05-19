@@ -8,7 +8,7 @@ import {promisify} from "util";
 
 import bcrypt from "bcryptjs";
 
-import {CONSTANTS, splitTrim, randomInteger, randomHex, seedHex, checkEmpty} from "./index.js";
+import {CONSTANTS, checkEmpty} from "./index.js";
 
 
 const execAsync = promisify(exec);
@@ -110,117 +110,6 @@ export function bcryptVerify(plainText, hash, {key = "", preHash = true} = {}) {
         input = sha256(input);
     }
     return bcrypt.compareSync(input, hash);
-}
-
-export function normalizeProxy(proxy, protocol = "http") {
-    proxy = proxy?.trim();
-    if (!proxy) return null;
-
-    const schemeMatch = proxy.match(/^([a-z][a-z0-9+.-]*):\/\/(.+)$/i);
-    if (schemeMatch) {
-        protocol = schemeMatch[1];
-        proxy = schemeMatch[2];
-    }
-
-    let auth = "";
-    let body = proxy;
-
-    const atIdx = body.lastIndexOf("@");
-    if (atIdx !== -1) {
-        auth = body.slice(0, atIdx) + "@";
-        body = body.slice(atIdx + 1);
-    }
-
-    if (!auth) {
-        // Note: when the password itself is all-digit and port-shaped (e.g. "admin:1234:host:port"),
-        // the heuristic cannot distinguish auth-first from host-first ordering and may pick the wrong branch.
-        const parts = body.split(":");
-        const isPort = (s) => /^\d+$/.test(s) && +s >= 1 && +s <= 65535;
-        if (parts.length === 4) {
-            if (isPort(parts[3]) && !isPort(parts[1])) {
-                // user:pass:host:port
-                auth = `${parts[0]}:${parts[1]}@`;
-                body = `${parts[2]}:${parts[3]}`;
-            } else {
-                // host:port:user:pass (default)
-                auth = `${parts[2]}:${parts[3]}@`;
-                body = `${parts[0]}:${parts[1]}`;
-            }
-        } else if (parts.length === 5) {
-            if (isPort(parts[3]) && isPort(parts[4]) && !isPort(parts[1])) {
-                // user:pass:host:portStart:portEnd
-                auth = `${parts[0]}:${parts[1]}@`;
-                body = `${parts[2]}:${parts[3]}:${parts[4]}`;
-            } else {
-                // host:portStart:portEnd:user:pass (default)
-                auth = `${parts[3]}:${parts[4]}@`;
-                body = `${parts[0]}:${parts[1]}:${parts[2]}`;
-            }
-        }
-    }
-
-    const parts = body.split(":");
-    if (parts.length === 3) {
-        const start = Number(parts[1]);
-        const end = Number(parts[2]);
-        if (Number.isInteger(start) && Number.isInteger(end) && start >= 0 && start <= end) {
-            body = `${parts[0]}:${randomInteger(start, end + 1)}`;
-        }
-    }
-
-    return `${protocol}://${auth}${body}`;
-}
-
-export function parseProxy(proxy, protocol = "http") {
-    const normalized = normalizeProxy(proxy, protocol);
-    if (!normalized) return null;
-
-    const [scheme, rest] = normalized.split("://");
-    const atIdx = rest.lastIndexOf("@");
-    const authPart = atIdx === -1 ? null : rest.slice(0, atIdx);
-    const hostPart = atIdx === -1 ? rest : rest.slice(atIdx + 1);
-
-    const [host, port] = hostPart.split(":");
-    const result = {
-        protocol: scheme,
-        host,
-        port: parseInt(port, 10),
-    };
-
-    if (authPart !== null) {
-        const colonIdx = authPart.indexOf(":");
-        const [username, password] = colonIdx === -1
-            ? [authPart, ""]
-            : [authPart.slice(0, colonIdx), authPart.slice(colonIdx + 1)];
-        result.auth = {username, password};
-    }
-
-    return result;
-}
-
-export function proxyValue(rawProxy, replacements = {}) {
-    const list = splitTrim(rawProxy || "");
-    if (list.length === 0) return null;
-    const picked = list[randomInteger(0, list.length)];
-
-    const {SESSION, ...rest} = replacements;
-    let sessionValue;
-    if (SESSION === undefined) {
-        sessionValue = randomHex(8);
-    } else if (typeof SESSION === "function") {
-        sessionValue = SESSION();
-    } else {
-        sessionValue = seedHex(String(SESSION), 8);
-    }
-
-    let result = normalizeProxy(picked);
-    if (!result) return null;
-    result = result.replace("{SESSION}", sessionValue);
-    for (const [key, value] of Object.entries(rest)) {
-        const v = typeof value === "function" ? value() : String(value);
-        result = result.replace(`{${key}}`, v);
-    }
-    return result;
 }
 
 export async function readJsonFile(filePath, defaultValue = {}) {

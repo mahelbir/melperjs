@@ -40,7 +40,10 @@ import {
     cookiesToHeader,
     cookiesFromHeader,
     isTransientHttpCode,
-    getResponseError
+    getResponseError,
+    normalizeProxy,
+    parseProxy,
+    proxyValue
 } from "../src/index.js";
 
 
@@ -144,7 +147,7 @@ describe("retry", () => {
             retry(
                 async () => {throw new Error("nope");},
                 3,
-                (attempt, error) => errors.push([attempt, error.message])
+                (error, attempt) => errors.push([attempt, error.message])
             ),
             /nope/
         );
@@ -600,5 +603,233 @@ describe("getResponseError", () => {
     it("respects the limit parameter", () => {
         const long = "x".repeat(200);
         assert.equal(getResponseError(new Error(long), 10).length, 10);
+    });
+});
+
+
+describe("normalizeProxy", () => {
+    describe("plain host:port", () => {
+        it("formats IP", () => {
+            assert.equal(normalizeProxy("1.2.3.4:8080"), "http://1.2.3.4:8080");
+        });
+        it("formats FQDN", () => {
+            assert.equal(normalizeProxy("proxy.example.com:8080"), "http://proxy.example.com:8080");
+        });
+        it("formats single-label hostname (localhost)", () => {
+            assert.equal(normalizeProxy("localhost:8080"), "http://localhost:8080");
+        });
+        it("trims surrounding whitespace", () => {
+            assert.equal(normalizeProxy("  1.2.3.4:8080  "), "http://1.2.3.4:8080");
+        });
+    });
+
+    describe("scheme prefix", () => {
+        it("preserves http://", () => {
+            assert.equal(normalizeProxy("http://1.2.3.4:8080"), "http://1.2.3.4:8080");
+        });
+        it("preserves https://", () => {
+            assert.equal(normalizeProxy("https://1.2.3.4:8080"), "https://1.2.3.4:8080");
+        });
+        it("preserves socks4://", () => {
+            assert.equal(normalizeProxy("socks4://1.2.3.4:8080"), "socks4://1.2.3.4:8080");
+        });
+        it("preserves socks5://", () => {
+            assert.equal(normalizeProxy("socks5://1.2.3.4:8080"), "socks5://1.2.3.4:8080");
+        });
+        it("preserves socks5h://", () => {
+            assert.equal(normalizeProxy("socks5h://1.2.3.4:8080"), "socks5h://1.2.3.4:8080");
+        });
+        it("uses the protocol parameter when no scheme is present", () => {
+            assert.equal(normalizeProxy("1.2.3.4:8080", "socks5"), "socks5://1.2.3.4:8080");
+        });
+        it("scheme in input overrides the protocol parameter", () => {
+            assert.equal(normalizeProxy("socks5://1.2.3.4:8080", "https"), "socks5://1.2.3.4:8080");
+        });
+    });
+
+    describe("auth via @ separator", () => {
+        it("handles user:pass@host:port", () => {
+            assert.equal(normalizeProxy("user:pass@1.2.3.4:8080"), "http://user:pass@1.2.3.4:8080");
+        });
+        it("handles scheme://user:pass@host:port", () => {
+            assert.equal(normalizeProxy("https://user:pass@1.2.3.4:8080"), "https://user:pass@1.2.3.4:8080");
+        });
+        it("handles password containing @ (last @ wins)", () => {
+            assert.equal(normalizeProxy("user:p@ss@1.2.3.4:8080"), "http://user:p@ss@1.2.3.4:8080");
+        });
+        it("handles username with provider params (dashes)", () => {
+            assert.equal(normalizeProxy("user-session-abc:pass@1.2.3.4:8080"), "http://user-session-abc:pass@1.2.3.4:8080");
+        });
+    });
+
+    describe("auth via colon separator (4-part)", () => {
+        it("reorders host:port:user:pass to user:pass@host:port", () => {
+            assert.equal(normalizeProxy("1.2.3.4:8080:user:pass"), "http://user:pass@1.2.3.4:8080");
+        });
+        it("works with scheme prefix", () => {
+            assert.equal(normalizeProxy("socks5://1.2.3.4:8080:user:pass"), "socks5://user:pass@1.2.3.4:8080");
+        });
+        it("uses the protocol parameter when missing", () => {
+            assert.equal(normalizeProxy("1.2.3.4:8080:user:pass", "https"), "https://user:pass@1.2.3.4:8080");
+        });
+        it("auto-detects user:pass:host:port (auth-first ordering)", () => {
+            assert.equal(normalizeProxy("user:pass:1.2.3.4:8080"), "http://user:pass@1.2.3.4:8080");
+        });
+        it("auto-detects user:pass:host:port with scheme", () => {
+            assert.equal(normalizeProxy("socks5://user:pass:1.2.3.4:8080"), "socks5://user:pass@1.2.3.4:8080");
+        });
+    });
+
+    describe("port range (3-part) host:portStart:portEnd", () => {
+        it("picks a random port in range", () => {
+            const ports = new Set();
+            for (let i = 0; i < 60; i++) {
+                const result = normalizeProxy("1.2.3.4:8000:8010");
+                const port = parseInt(result.split(":").pop());
+                assert.ok(port >= 8000 && port <= 8010, `port ${port} outside [8000, 8010]`);
+                ports.add(port);
+            }
+            assert.ok(ports.size > 1);
+        });
+    });
+
+    describe("port range with auth (5-part) host:portStart:portEnd:user:pass", () => {
+        it("picks a random port and reorders auth", () => {
+            const ports = new Set();
+            for (let i = 0; i < 60; i++) {
+                const result = normalizeProxy("1.2.3.4:8000:8010:user:pass");
+                assert.ok(result.startsWith("http://user:pass@1.2.3.4:"));
+                const port = parseInt(result.split(":").pop());
+                assert.ok(port >= 8000 && port <= 8010, `port ${port} outside [8000, 8010]`);
+                ports.add(port);
+            }
+            assert.ok(ports.size > 1);
+        });
+
+        it("auto-detects user:pass:host:portStart:portEnd (auth-first ordering)", () => {
+            const ports = new Set();
+            for (let i = 0; i < 60; i++) {
+                const result = normalizeProxy("user:pass:1.2.3.4:8000:8010");
+                assert.ok(result.startsWith("http://user:pass@1.2.3.4:"));
+                const port = parseInt(result.split(":").pop());
+                assert.ok(port >= 8000 && port <= 8010);
+                ports.add(port);
+            }
+            assert.ok(ports.size > 1);
+        });
+
+        it("handles user:pass@host:portStart:portEnd (@-auth with port range)", () => {
+            const ports = new Set();
+            for (let i = 0; i < 60; i++) {
+                const result = normalizeProxy("user:pass@1.2.3.4:8000:8010");
+                assert.ok(result.startsWith("http://user:pass@1.2.3.4:"));
+                const port = parseInt(result.split(":").pop());
+                assert.ok(port >= 8000 && port <= 8010);
+                ports.add(port);
+            }
+            assert.ok(ports.size > 1);
+        });
+    });
+
+    describe("ambiguous all-digit password (host heuristic)", () => {
+        it("4-part: numeric user + dotted host resolves to auth-first", () => {
+            assert.equal(normalizeProxy("1234:5678:1.2.3.4:8080"), "http://1234:5678@1.2.3.4:8080");
+        });
+        it("5-part: numeric user + dotted host resolves to auth-first", () => {
+            const result = normalizeProxy("1234:5678:1.2.3.4:9000:9010");
+            assert.ok(result.startsWith("http://1234:5678@1.2.3.4:"));
+            const port = parseInt(result.split(":").pop());
+            assert.ok(port >= 9000 && port <= 9010);
+        });
+        it("4-part: both sides letter-y stays in host-first fallback", () => {
+            assert.equal(normalizeProxy("admin:1234:host:8080"), "http://host:8080@admin:1234");
+        });
+    });
+
+    describe("edge cases (no crash)", () => {
+        it("empty string returns empty", () => {
+            assert.equal(normalizeProxy(""), null);
+        });
+        it("whitespace-only returns empty", () => {
+            assert.equal(normalizeProxy("   "), null);
+        });
+        it("single token is preserved as host", () => {
+            assert.equal(normalizeProxy("hostonly"), "http://hostonly");
+        });
+        it("3-part with non-numeric middle is left unchanged", () => {
+            assert.equal(normalizeProxy("host:port:tail"), "http://host:port:tail");
+        });
+        it("3-part with numeric but reversed range (start > end) is left unchanged", () => {
+            assert.equal(normalizeProxy("host:9000:8000"), "http://host:9000:8000");
+        });
+    });
+});
+
+
+describe("parseProxy", () => {
+    it("decomposes a credentialled proxy into structured fields", () => {
+        const obj = parseProxy("socks5://1.2.3.4:8080:user:pass");
+        assert.deepEqual(obj, {
+            protocol: "socks5",
+            host: "1.2.3.4",
+            port: 8080,
+            auth: {username: "user", password: "pass"}
+        });
+    });
+
+    it("omits auth when the proxy has no credentials", () => {
+        const obj = parseProxy("1.2.3.4:8080");
+        assert.equal(obj.protocol, "http");
+        assert.equal(obj.host, "1.2.3.4");
+        assert.equal(obj.port, 8080);
+        assert.equal(obj.auth, undefined);
+    });
+});
+
+
+describe("proxyValue", () => {
+    it("returns null on empty input", () => {
+        assert.equal(proxyValue(""), null);
+        assert.equal(proxyValue(null), null);
+    });
+
+    it("auto-fills {SESSION} with a random 8-hex token by default", () => {
+        const pool = `
+            1.2.3.4:8080:user-{SESSION}:pass
+            5.6.7.8:9090:user-{SESSION}:pass
+        `;
+        const result = proxyValue(pool);
+        assert.ok(result.startsWith("http://"));
+        assert.ok(!result.includes("{SESSION}"));
+        assert.match(result, /user-[0-9a-f]{8}:pass@/);
+    });
+
+    it("treats a string SESSION as a seed via seedHex (deterministic)", () => {
+        const pool = "1.2.3.4:8080:user-{SESSION}:pass";
+        const a = proxyValue(pool, {SESSION: "abc"});
+        const b = proxyValue(pool, {SESSION: "abc"});
+        const c = proxyValue(pool, {SESSION: "xyz"});
+        assert.equal(a, b);
+        assert.notEqual(a, c);
+        assert.match(a, /user-[0-9a-f]{8}:pass@/);
+    });
+
+    it("calls a function SESSION on each invocation", () => {
+        const pool = "1.2.3.4:8080:user-{SESSION}:pass";
+        let counter = 0;
+        const result = proxyValue(pool, {SESSION: () => `fixed-${++counter}`});
+        assert.match(result, /user-fixed-1:pass@/);
+    });
+
+    it("non-SESSION string values are used as literals (no seedHex)", () => {
+        const pool = "1.2.3.4:8080:user-{ZONE}-{SESSION}:pass";
+        const result = proxyValue(pool, {ZONE: "us"});
+        assert.match(result, /user-us-[0-9a-f]{8}:pass@/);
+    });
+
+    it("non-SESSION function values are called normally", () => {
+        const pool = "1.2.3.4:8080:user-{MYTOKEN}:pass";
+        const result = proxyValue(pool, {MYTOKEN: () => "anything"});
+        assert.match(result, /user-anything:pass@/);
     });
 });
