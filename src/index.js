@@ -59,32 +59,33 @@ export async function forever(delayMs, task, onError = null, onFinally = null) {
     if (!isPositiveNumber(delayMs))
         throw new Error("delayMs must be a positive number");
 
-    const maybeUpdate = (value) => {
+    const update = (value) => {
         if (isPositiveNumber(value)) delayMs = value;
     };
 
     while (true) {
         try {
-            maybeUpdate(await task());
+            update(await task());
         } catch (error) {
-            if (onError) maybeUpdate(await onError(error));
+            if (onError) update(await onError(error));
         } finally {
             if (onFinally) {
                 try {
-                    maybeUpdate(await onFinally());
-                } catch {}
+                    update(await onFinally());
+                } catch {
+                }
             }
             await sleepMs(delayMs);
         }
     }
 }
 
-export async function retry(callFn, maxAttempts, errorFn = null, {delayMs = 0, backoffFactor = 1} = {}) {
+export async function retry(task, maxAttempts = 1, onError = null, {delayMs = 0, backoffFactor = 1} = {}) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            return await callFn();
+            return await task();
         } catch (error) {
-            if (errorFn) await errorFn(attempt, error);
+            if (onError) await onError(attempt, error);
             if (attempt >= maxAttempts) throw error;
             if (delayMs > 0) await sleepMs(delayMs * backoffFactor ** (attempt - 1));
         }
@@ -122,7 +123,7 @@ export function isInt32(value) {
 }
 
 export function isPositiveNumber(value) {
-    return typeof value === 'number' && Number.isFinite(value) && value > 0;
+    return Number.isFinite(value) && value > 0;
 }
 
 export function coerceObjectNumbers(object) {
@@ -171,7 +172,7 @@ export function waitForProperty(object, property, timeout = 5000, interval = 100
                 resolve(object[property]);
             } else if (Date.now() - startTime >= timeout) {
                 clearInterval(checkProperty);
-                reject(new Error(`Property "${property}" did not appear within ${timeout} milliseconds`));
+                reject(new Error(`Property "${property}" did not appear within ${timeout}ms`));
             }
         }, interval);
     });
@@ -235,7 +236,7 @@ export function randomHex(length) {
     return result;
 }
 
-export function randomInteger(min, max) {
+export function randomInteger(min, max = undefined) {
     if (typeof max === 'undefined') {
         max = min;
         min = 0;
@@ -258,6 +259,7 @@ export function randomUuid(useDashes = true) {
 }
 
 export function randomWeighted(object) {
+    if (checkEmpty(object)) return undefined;
     const elements = Object.keys(object);
     const weights = Object.values(object);
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
@@ -272,7 +274,7 @@ export function randomWeighted(object) {
 }
 
 export function randomElement(object) {
-    if (!object) return undefined;
+    if (checkEmpty(object)) return undefined;
     const values = Array.isArray(object) ? object : Object.values(object);
     if (values.length === 0) return undefined;
     return values[Math.floor(Math.random() * values.length)];
@@ -286,7 +288,7 @@ export function mulberry32(seed) {
         }
         seed = h >>> 0;
     }
-    return function() {
+    return function () {
         seed = (seed + 0x6D2B79F5) | 0;
         let t = seed;
         t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -305,12 +307,12 @@ export function seedHex(seed, length) {
 }
 
 export function cookiesFromResponse(response, decodeValues = false) {
-    const dict = {};
+    const obj = {};
     const cookies = setCookieParser.parse(response, {decodeValues});
     for (const cookie of cookies) {
-        dict[cookie.name] = cookie.value;
+        obj[cookie.name] = cookie.value;
     }
-    return dict;
+    return obj;
 }
 
 export function cookiesToHeader(cookies) {

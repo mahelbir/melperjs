@@ -7,11 +7,11 @@ and will not run in a browser.
 
 All `secureRandom*` helpers use Node's `crypto` module (`crypto.randomInt`, `crypto.randomBytes`, `crypto.randomUUID`).
 Use these for session tokens, API keys, nonces, and anything security-sensitive. For non-secure / faster equivalents,
-see the `random*` family in [General Functions](./general.md).
+see the `random*` family in [General Functions](index.md).
 
 ### secureRandomBoolean()
 
-Returns `true` or `false` with cryptographically uniform probability.
+Returns a cryptographically random `true` or `false` with uniform probability.
 
 - **Returns:** `Boolean`.
 
@@ -35,16 +35,17 @@ Generates a cryptographically random hexadecimal string.
 
 ### secureRandomInteger(min, max)
 
-Returns a cryptographically random integer in `[min, max)`. Thin wrapper over `crypto.randomInt`.
+Returns a cryptographically random integer in `[min, max)`. If called with a single argument it is treated as `max` with `min = 0` (e.g., `secureRandomInteger(10)` returns `0..9`).
 
 - **Parameters:**
-    - `min` (Number): Inclusive lower bound.
+    - `min` (Number): Inclusive lower bound, or `max` when called with one argument.
     - `max` (Number): Exclusive upper bound.
 - **Returns:** Integer in `[min, max)`.
+- **Throws:** When inputs are not numbers, or when `max <= min`.
 
 ### secureRandomUuid(useDashes = true)
 
-Generates a cryptographically random UUID v4 via `crypto.randomUUID()`. Suitable for security tokens.
+Generates a cryptographically random UUID v4 string. Suitable for security tokens.
 
 - **Parameters:**
     - `useDashes` (Boolean): When `false`, dashes are stripped.
@@ -52,17 +53,15 @@ Generates a cryptographically random UUID v4 via `crypto.randomUUID()`. Suitable
 
 ### secureRandomWeighted(object)
 
-Picks a key from `object` with probability proportional to its weight, using `crypto.randomInt` for selection. Weights
-must be positive integers.
+Picks a cryptographically random key from `object` with probability proportional to its weight. Returns `undefined` for empty or nullish input.
 
 - **Parameters:**
     - `object` (Object): Map of key → positive integer weight.
-- **Returns:** Selected key.
+- **Returns:** Selected key, or `undefined`.
 
 ### secureRandomElement(object)
 
-Picks a cryptographically random value from an array or from an object's own enumerable values. Returns `undefined` for
-empty or nullish input.
+Picks a cryptographically random value from an array or from an object's own enumerable values. Returns `undefined` for empty or nullish input.
 
 - **Parameters:**
     - `object` (Array|Object): Source collection.

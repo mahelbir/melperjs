@@ -13,10 +13,10 @@ npm i melperjs
 
 ## Documentation
 
-Full API reference lives in the [docs folder](docs/index.md):
+Full API reference lives in the [docs folder](docs/docs.md):
 
-- [General Functions](docs/general.md) — `melperjs` (browser-safe)
-- [Node.js Functions](docs/node.md) — `melperjs/node`
+- [General Functions](docs/index.md) — browser-safe helpers (`melperjs`)
+- [Node.js Functions](docs/node.md) — Node-only helpers (`melperjs/node`)
 
 ## License
 

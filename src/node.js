@@ -8,13 +8,13 @@ import {promisify} from "util";
 
 import bcrypt from "bcryptjs";
 
-import {CONSTANTS, splitTrim, randomInteger, randomHex, seedHex} from "./index.js";
+import {CONSTANTS, splitTrim, randomInteger, randomHex, seedHex, checkEmpty} from "./index.js";
 
 
 const execAsync = promisify(exec);
 
 export function secureRandomBoolean() {
-    return crypto.randomInt(2) === 0;
+    return secureRandomInteger(2) === 1;
 }
 
 export function secureRandomString(length, useNumbers = true, useUppercase = false) {
@@ -24,7 +24,7 @@ export function secureRandomString(length, useNumbers = true, useUppercase = fal
 
     let result = '';
     for (let i = 0; i < length; i++) {
-        result += characters[crypto.randomInt(0, characters.length)];
+        result += characters[secureRandomInteger(0, characters.length)];
     }
     return result;
 }
@@ -36,7 +36,7 @@ export function secureRandomHex(length) {
         .slice(0, length);
 }
 
-export function secureRandomInteger(min, max) {
+export function secureRandomInteger(min, max = undefined) {
     return crypto.randomInt(min, max);
 }
 
@@ -46,6 +46,7 @@ export function secureRandomUuid(useDashes = true) {
 }
 
 export function secureRandomWeighted(object) {
+    if (checkEmpty(object)) return undefined;
     const elements = Object.keys(object);
     const weights = Object.values(object);
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
@@ -60,10 +61,10 @@ export function secureRandomWeighted(object) {
 }
 
 export function secureRandomElement(object) {
-    if (!object) return undefined;
+    if (checkEmpty(object)) return undefined;
     const values = Array.isArray(object) ? object : Object.values(object);
     if (values.length === 0) return undefined;
-    return values[crypto.randomInt(0, values.length)];
+    return values[secureRandomInteger(0, values.length)];
 }
 
 export function uuidFromSeed(seed, useDashes = true) {
@@ -163,7 +164,7 @@ export function normalizeProxy(proxy, protocol = "http") {
         const start = Number(parts[1]);
         const end = Number(parts[2]);
         if (Number.isInteger(start) && Number.isInteger(end) && start >= 0 && start <= end) {
-            body = `${parts[0]}:${crypto.randomInt(start, end + 1)}`;
+            body = `${parts[0]}:${randomInteger(start, end + 1)}`;
         }
     }
 

@@ -118,6 +118,11 @@ describe("secureRandomWeighted / secureRandomElement", () => {
         assert.equal(seen.size, 3);
     });
 
+    it("secureRandomWeighted returns undefined for falsy input", () => {
+        assert.equal(secureRandomWeighted(null), undefined);
+        assert.equal(secureRandomWeighted(undefined), undefined);
+    });
+
     it("secureRandomElement returns an array element", () => {
         const arr = ["x", "y", "z"];
         for (let i = 0; i < 20; i++) {

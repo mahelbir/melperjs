@@ -138,7 +138,7 @@ describe("retry", () => {
         assert.equal(calls, 2);
     });
 
-    it("invokes errorFn on each failure and rethrows after attempts are exhausted", async () => {
+    it("invokes onError on each failure and rethrows after attempts are exhausted", async () => {
         const errors = [];
         await assert.rejects(
             retry(
