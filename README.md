@@ -1,7 +1,6 @@
 # melperjs
 
-[![npm version](https://badge.fury.io/js/melperjs.svg)](https://badge.fury.io/js/melperjs)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/melperjs.svg)](https://www.npmjs.com/package/melperjs)
 
 A compact JavaScript utility library for strings, objects, tokens, hashing, cookies, proxies, file I/O, shell, and more.
 
@@ -13,10 +12,7 @@ npm i melperjs
 
 ## Documentation
 
-Full API reference lives in the [docs folder](docs/docs.md):
-
-- [General Functions](docs/index.md) — browser-safe helpers (`melperjs`)
-- [Node.js Functions](docs/node.md) — Node-only helpers (`melperjs/node`)
+See the [docs folder](docs/README.md) for the full API reference.
 
 ## License
 

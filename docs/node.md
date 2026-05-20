@@ -7,7 +7,7 @@ and will not run in a browser.
 
 All `secureRandom*` helpers use Node's `crypto` module (`crypto.randomInt`, `crypto.randomBytes`, `crypto.randomUUID`).
 Use these for session tokens, API keys, nonces, and anything security-sensitive. For non-secure / faster equivalents,
-see the `random*` family in [General Functions](index.md).
+see the `random*` family in [General Functions](general.md).
 
 ### secureRandomBoolean()
 

@@ -44,7 +44,7 @@ import {
     normalizeProxy,
     parseProxy,
     proxyValue
-} from "../src/index.js";
+} from "../src/general.js";
 
 
 describe("CONSTANTS", () => {

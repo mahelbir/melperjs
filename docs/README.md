@@ -1,10 +1,9 @@
 # Documentation
 
-`melperjs` is a small utility library split into two entry points:
+`melperjs` is a lightweight utility library split into two entry points:
 
-- **Core module** (`melperjs`) — browser-safe helpers. No Node-only APIs, no `crypto`, no `fs`. Safe to import from any
-  JavaScript environment.
-- **Node module** (`melperjs/node`) — Node.js-specific helpers built on `crypto`, `fs`, `child_process`, and `os`.
+- **Core module** (`melperjs`) — browser-safe helpers. Safe to import from any JavaScript environment.
+- **Node module** (`melperjs/node`) — Node.js-specific helpers built on `crypto`, `fs`, `child_process`, `os`, and more.
   Importing this in a browser will fail.
 
 ## Usage
@@ -23,5 +22,5 @@ Both forms are supported via dual ESM/CJS builds.
 
 ## Sections
 
-- [General Functions](index.md) — browser-safe helpers (`melperjs`)
+- [General Functions](general.md) — browser-safe helpers (`melperjs`)
 - [Node.js Functions](./node.md) — Node-only helpers (`melperjs/node`)

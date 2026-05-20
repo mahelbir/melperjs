@@ -311,4 +311,4 @@ $RECYCLE.BIN/
 
 
 *.local.*
-/lib/
+/dist/

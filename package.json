@@ -1,5 +1,6 @@
 {
   "name": "melperjs",
+  "version": "17.0.0",
   "description": "A compact JavaScript utility library for strings, objects, tokens, hashing, cookies, proxies, file I/O, shell, and more.",
   "keywords": [
     "melperjs",
@@ -24,36 +25,38 @@
     "file-system",
     "shell"
   ],
+  "homepage": "https://github.com/mahelbir/melperjs#readme",
+  "bugs": {
+    "url": "https://github.com/mahelbir/melperjs/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mahelbir/melperjs.git"
   },
-  "author": "Mahmuthan Elbir",
   "license": "MIT",
+  "author": "Mahmuthan Elbir",
   "type": "module",
-  "files": [
-    "lib/**/*",
-    "docs/**/*"
-  ],
-  "private": false,
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": ">=18.0.0"
   },
+  "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./lib/esm/index.mjs",
-      "require": "./lib/cjs/index.cjs"
+      "import": "./dist/general.mjs",
+      "require": "./dist/general.cjs"
     },
     "./node": {
-      "import": "./lib/esm/node.mjs",
-      "require": "./lib/cjs/node.cjs"
+      "import": "./dist/node.mjs",
+      "require": "./dist/node.cjs"
     }
   },
+  "files": [
+    "dist/**/*",
+    "docs/**/*"
+  ],
   "scripts": {
-    "build:esm": "npx cross-env BABEL_ENV=esm babel ./src --out-dir ./lib/esm --out-file-extension .mjs",
-    "build:cjs": "npx cross-env BABEL_ENV=cjs babel ./src --out-dir ./lib/cjs --out-file-extension .cjs",
-    "build": "npm run build:esm && npm run build:cjs",
-    "test": "node --test 'tests/**/*.test.js'",
+    "build": "tsdown",
+    "test": "node --test",
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
@@ -63,12 +66,9 @@
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "@babel/cli": "^7.28.6",
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.5",
-    "babel-plugin-replace-import-extension": "^1.1.5",
-    "babel-plugin-transform-import-meta": "^2.3.3",
-    "cross-env": "^10.1.0"
+    "tsdown": "^0.22.0"
   },
-  "version": "17.0.0"
+  "publishConfig": {
+    "access": "public"
+  }
 }

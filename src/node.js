@@ -8,7 +8,7 @@ import {promisify} from "util";
 
 import bcrypt from "bcryptjs";
 
-import {CONSTANTS, checkEmpty} from "./index.js";
+import {CONSTANTS, checkEmpty} from "./general.js";
 
 
 const execAsync = promisify(exec);
