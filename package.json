@@ -57,6 +57,7 @@
   "scripts": {
     "build": "tsdown",
     "test": "node --test",
+    "relock": "rm -rf node_modules package-lock.json && NODE_ENV= npm install --include=dev --include=optional",
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
