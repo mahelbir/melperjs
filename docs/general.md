@@ -288,17 +288,17 @@ Depth-first search through a nested object for the first node that owns `key`. I
   - `pair` (Any): Optional value constraint. `null` means "match any value".
 - **Returns:** The matching node, or `null` if not found.
 
-### waitForProperty(object, property, timeout, interval = 100)
+### waitForProperty(object, property, timeoutMs, interval = 100)
 
 Polls `object` until it owns `property`, then resolves with the property's value. Rejects after `timeout` milliseconds.
 
 - **Parameters:**
   - `object` (Object): Object to watch.
   - `property` (String): Property name to wait for.
-  - `timeout` (Number): Maximum wait time in milliseconds.
+  - `timeoutMs` (Number): Maximum wait time in milliseconds.
   - `interval` (Number): Poll interval in milliseconds.
 - **Returns:** `Promise` resolving to the property's value.
-- **Throws:** When the property does not appear within `timeout`.
+- **Throws:** When the property does not appear within `timeoutMs`.
 
 ### shuffleObject(object)
 

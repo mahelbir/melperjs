@@ -49,9 +49,9 @@ export function promiseTimeout(milliseconds, promise) {
 
 export function promiseSilent(promise) {
     return promise
-        .then(() => {
+        ?.then(() => {
         })
-        .catch(() => {
+        ?.catch(() => {
         });
 }
 
@@ -159,7 +159,7 @@ export function findNodeByKey(key, node, pair = null) {
     return null;
 }
 
-export function waitForProperty(object, property, timeout, interval = 100) {
+export function waitForProperty(object, property, timeoutMs, interval = 100) {
     return new Promise((resolve, reject) => {
         if (Object.hasOwn(object, property)) {
             resolve(object[property]);
@@ -170,9 +170,9 @@ export function waitForProperty(object, property, timeout, interval = 100) {
             if (Object.hasOwn(object, property)) {
                 clearInterval(checkProperty);
                 resolve(object[property]);
-            } else if (Date.now() - startTime >= timeout) {
+            } else if (Date.now() - startTime >= timeoutMs) {
                 clearInterval(checkProperty);
-                reject(new Error(`Property "${property}" did not appear within ${timeout}ms`));
+                reject(new Error(`Property "${property}" did not appear within ${timeoutMs}ms`));
             }
         }, interval);
     });
@@ -474,7 +474,7 @@ export function proxyValue(rawProxy, replacements = {}) {
     if (result.includes("{")) {
         const {SESSION, ...rest} = replacements;
         let sessionValue;
-        if (SESSION === undefined) {
+        if (!SESSION && SESSION !== 0) {
             sessionValue = randomHex(8);
         } else if (typeof SESSION === "function") {
             sessionValue = SESSION();
