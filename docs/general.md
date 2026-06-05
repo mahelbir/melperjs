@@ -114,7 +114,7 @@ Splits a string, trims each piece, and drops empty results. Default separator is
 
 ### pascalCase(string)
 
-Converts arbitrary text to `PascalCase` (uses lodash internally).
+Converts arbitrary text to `PascalCase` (uses es-toolkit internally).
 
 - **Parameters:**
   - `string` (String): Input text.
@@ -149,7 +149,7 @@ Strips HTML tags via the `xss` library and additionally removes the body of dang
 
 ### shuffleString(string)
 
-Randomly reorders the characters in a string using lodash's `shuffle` (Fisher-Yates).
+Randomly reorders the characters in a string using es-toolkit's `shuffle` (Fisher-Yates).
 
 - **Parameters:**
   - `string` (String): Source string.
@@ -238,7 +238,7 @@ Builds a deterministic hex string of the requested length from a seed via `mulbe
 
 ### checkEmpty(value)
 
-Like lodash's `isEmpty` but additionally treats `0` (numeric zero) as empty.
+Like es-toolkit's `isEmpty` but additionally treats `0` (numeric zero) as empty.
 
 - **Parameters:**
   - `value` (Any): Value to test.

@@ -205,7 +205,7 @@ describe("checkEmpty", () => {
         assert.equal(checkEmpty(1), false);
     });
 
-    it("delegates to lodash.isEmpty for non-numbers", () => {
+    it("delegates to es-toolkit isEmpty for non-numbers", () => {
         assert.equal(checkEmpty(""), true);
         assert.equal(checkEmpty([]), true);
         assert.equal(checkEmpty({}), true);

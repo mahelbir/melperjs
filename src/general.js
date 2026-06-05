@@ -1,9 +1,8 @@
 import xss from "xss";
 import setCookieParser from "set-cookie-parser";
-import camelCase from "lodash/camelCase.js";
-import upperFirst from "lodash/upperFirst.js";
-import isEmpty from "lodash/isEmpty.js";
-import shuffle from "lodash/shuffle.js";
+import { camelCase, upperFirst } from "es-toolkit/string";
+import { shuffle } from "es-toolkit/array";
+import isEmpty from "es-toolkit/compat/isEmpty";
 
 
 export const CONSTANTS = {
