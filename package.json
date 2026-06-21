@@ -3,27 +3,10 @@
   "version": "17.1.1",
   "description": "A compact JavaScript utility library for strings, objects, tokens, hashing, cookies, proxies, file I/O, shell, and more.",
   "keywords": [
-    "melperjs",
     "utilities",
     "utils",
     "helpers",
-    "javascript",
-    "nodejs",
-    "esm",
-    "cjs",
-    "string",
-    "object",
-    "random",
-    "token",
-    "uuid",
-    "bcrypt",
-    "hash",
-    "crypto",
-    "cookie",
-    "base64",
-    "proxy",
-    "file-system",
-    "shell"
+    "random"
   ],
   "homepage": "https://github.com/mahelbir/melperjs#readme",
   "bugs": {
@@ -62,12 +45,12 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "es-toolkit": "^1.47.0",
+    "es-toolkit": "^1.48.1",
     "set-cookie-parser": "^3.1.0",
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "tsdown": "^0.22.2"
+    "tsdown": "^0.22.3"
   },
   "publishConfig": {
     "access": "public"
