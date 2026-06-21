@@ -140,16 +140,16 @@ export function writeJsonFileSync(filePath, data) {
     return fs.writeFileSync(filePath, jsonData, 'utf8');
 }
 
-export async function clearDirectory(directoryPath, keepDir = true) {
-    await fsp.rm(directoryPath, {recursive: true, force: true});
-    if (keepDir) await fsp.mkdir(directoryPath, {recursive: true});
-}
-
 export function createNumberedDirs(mainDirectory, start = 0, end = 9) {
     fs.mkdirSync(mainDirectory, {recursive: true});
     for (let i = start; i <= end; i++) {
         fs.mkdirSync(path.join(mainDirectory, `${i}`), {recursive: true});
     }
+}
+
+export async function clearDirectory(directoryPath, keepDir = true) {
+    await fsp.rm(directoryPath, {recursive: true, force: true});
+    if (keepDir) await fsp.mkdir(directoryPath, {recursive: true});
 }
 
 export async function executeCommand(command) {

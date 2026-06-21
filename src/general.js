@@ -1,7 +1,7 @@
 import xss from "xss";
 import setCookieParser from "set-cookie-parser";
-import { camelCase, upperFirst } from "es-toolkit/string";
-import { shuffle } from "es-toolkit/array";
+import {camelCase, upperFirst} from "es-toolkit/string";
+import {shuffle} from "es-toolkit/array";
 import isEmpty from "es-toolkit/compat/isEmpty";
 
 
@@ -104,93 +104,12 @@ export function splitTrim(string, separator = null) {
     return string.split(separator ?? /\r?\n/).map(item => item.trim()).filter(Boolean);
 }
 
-export function checkEmpty(value) {
-    if (typeof value === "number") return value === 0;
-    return isEmpty(value);
-}
-
 export function pascalCase(string) {
     return upperFirst(camelCase(string));
 }
 
 export function titleCase(string, separator = " ") {
     return (string || "").split(separator).map(upperFirst).join(separator);
-}
-
-export function isInt32(value) {
-    return Number.isInteger(value) && value >= CONSTANTS.INT32_MIN && value <= CONSTANTS.INT32_MAX;
-}
-
-export function isPositiveNumber(value) {
-    return Number.isFinite(value) && value > 0;
-}
-
-export function coerceObjectNumbers(object) {
-    for (const key of Object.keys(object)) {
-        const value = object[key];
-        if (typeof value === 'string' && NUMBER_PATTERN.test(value)) {
-            object[key] = parseFloat(value);
-        }
-    }
-    return object;
-}
-
-export function coerceObjectIntegers(object) {
-    for (const key of Object.keys(object)) {
-        const value = object[key];
-        if (typeof value === 'string' && INTEGER_PATTERN.test(value)) {
-            object[key] = parseInt(value);
-        }
-    }
-    return object;
-}
-
-export function findNodeByKey(key, node, pair = null) {
-    if (node && typeof node === 'object') {
-        if (Object.hasOwn(node, key) && (pair === null || node[key] === pair)) {
-            return node;
-        }
-        for (const childKey of Object.keys(node)) {
-            const result = findNodeByKey(key, node[childKey], pair);
-            if (result) return result;
-        }
-    }
-    return null;
-}
-
-export function waitForProperty(object, property, timeoutMs, interval = 100) {
-    return new Promise((resolve, reject) => {
-        if (Object.hasOwn(object, property)) {
-            resolve(object[property]);
-            return;
-        }
-        const startTime = Date.now();
-        const checkProperty = setInterval(() => {
-            if (Object.hasOwn(object, property)) {
-                clearInterval(checkProperty);
-                resolve(object[property]);
-            } else if (Date.now() - startTime >= timeoutMs) {
-                clearInterval(checkProperty);
-                reject(new Error(`Property "${property}" did not appear within ${timeoutMs}ms`));
-            }
-        }, interval);
-    });
-}
-
-export function shuffleObject(object) {
-    return Object.fromEntries(shuffle(Object.entries(object)));
-}
-
-export function objectStringify(object) {
-    for (const key of Object.keys(object)) {
-        const value = object[key];
-        if (value !== null && typeof value === 'object') {
-            objectStringify(value);
-        } else {
-            object[key] = String(value);
-        }
-    }
-    return object;
 }
 
 export function castString(value) {
@@ -316,6 +235,87 @@ export function seedHex(seed, length) {
         result += Math.floor(rng() * 0x100000000).toString(16).padStart(8, '0');
     }
     return result.slice(0, length);
+}
+
+export function checkEmpty(value) {
+    if (typeof value === "number") return value === 0;
+    return isEmpty(value);
+}
+
+export function isInt32(value) {
+    return Number.isInteger(value) && value >= CONSTANTS.INT32_MIN && value <= CONSTANTS.INT32_MAX;
+}
+
+export function isPositiveNumber(value) {
+    return Number.isFinite(value) && value > 0;
+}
+
+export function coerceObjectNumbers(object) {
+    for (const key of Object.keys(object)) {
+        const value = object[key];
+        if (typeof value === 'string' && NUMBER_PATTERN.test(value)) {
+            object[key] = parseFloat(value);
+        }
+    }
+    return object;
+}
+
+export function coerceObjectIntegers(object) {
+    for (const key of Object.keys(object)) {
+        const value = object[key];
+        if (typeof value === 'string' && INTEGER_PATTERN.test(value)) {
+            object[key] = parseInt(value);
+        }
+    }
+    return object;
+}
+
+export function findNodeByKey(key, node, pair = null) {
+    if (node && typeof node === 'object') {
+        if (Object.hasOwn(node, key) && (pair === null || node[key] === pair)) {
+            return node;
+        }
+        for (const childKey of Object.keys(node)) {
+            const result = findNodeByKey(key, node[childKey], pair);
+            if (result) return result;
+        }
+    }
+    return null;
+}
+
+export function waitForProperty(object, property, timeoutMs, interval = 100) {
+    return new Promise((resolve, reject) => {
+        if (Object.hasOwn(object, property)) {
+            resolve(object[property]);
+            return;
+        }
+        const startTime = Date.now();
+        const checkProperty = setInterval(() => {
+            if (Object.hasOwn(object, property)) {
+                clearInterval(checkProperty);
+                resolve(object[property]);
+            } else if (Date.now() - startTime >= timeoutMs) {
+                clearInterval(checkProperty);
+                reject(new Error(`Property "${property}" did not appear within ${timeoutMs}ms`));
+            }
+        }, interval);
+    });
+}
+
+export function shuffleObject(object) {
+    return Object.fromEntries(shuffle(Object.entries(object)));
+}
+
+export function objectStringify(object) {
+    for (const key of Object.keys(object)) {
+        const value = object[key];
+        if (value !== null && typeof value === 'object') {
+            objectStringify(value);
+        } else {
+            object[key] = String(value);
+        }
+    }
+    return object;
 }
 
 export function cookiesFromResponse(response, decodeValues = false) {
