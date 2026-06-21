@@ -24,6 +24,7 @@ import {
     waitForProperty,
     shuffleObject,
     objectStringify,
+    castString,
     limitString,
     safeString,
     shuffleString,
@@ -341,6 +342,43 @@ describe("objectStringify", () => {
         assert.equal(obj.a, "1");
         assert.equal(obj.b.c, "true");
         assert.equal(obj.b.d, "null");
+    });
+});
+
+
+describe("castString", () => {
+    it("returns empty string for null and undefined", () => {
+        assert.equal(castString(null), "");
+        assert.equal(castString(undefined), "");
+    });
+
+    it("returns strings unchanged", () => {
+        assert.equal(castString("hi"), "hi");
+        assert.equal(castString(""), "");
+    });
+
+    it("converts numbers, booleans and bigint via String()", () => {
+        assert.equal(castString(0), "0");
+        assert.equal(castString(123), "123");
+        assert.equal(castString(-5), "-5");
+        assert.equal(castString(3.14), "3.14");
+        assert.equal(castString(false), "false");
+        assert.equal(castString(true), "true");
+        assert.equal(castString(10n), "10");
+    });
+
+    it("JSON-stringifies objects and arrays, keeping empties", () => {
+        assert.equal(castString({a: 1}), '{"a":1}');
+        assert.equal(castString({}), "{}");
+        assert.equal(castString([1, 2]), "[1,2]");
+        assert.equal(castString([]), "[]");
+    });
+
+    it("falls back to {} when JSON.stringify throws", () => {
+        const circular = {};
+        circular.self = circular;
+        assert.equal(castString(circular), "{}");
+        assert.equal(castString({a: 1n}), "{}");
     });
 });
 

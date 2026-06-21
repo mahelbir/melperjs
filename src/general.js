@@ -193,6 +193,19 @@ export function objectStringify(object) {
     return object;
 }
 
+export function castString(value) {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return '{}';
+        }
+    }
+    return String(value);
+}
+
 export function limitString(string, limit = 35, omission = "...") {
     string = string || "";
     if (string.length <= limit) return string;

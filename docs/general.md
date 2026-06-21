@@ -129,6 +129,14 @@ Capitalizes the first letter of each word delimited by `separator`. Other charac
   - `separator` (String): Word boundary. Defaults to a single space.
 - **Returns:** Title-cased string.
 
+### castString(value)
+
+Coerces any value to a string. `null` / `undefined` become `""`; strings are returned as-is; objects and arrays are serialized with `JSON.stringify` (falling back to `"{}"` if serialization throws); all other primitives go through `String()`. Pure — returns a new value, never mutates.
+
+- **Parameters:**
+  - `value` (Any): Value to convert.
+- **Returns:** `String`.
+
 ### limitString(string, limit = 35, omission = "...")
 
 Truncates a string if it exceeds `limit` characters and appends `omission`. Strings shorter than the limit are returned unchanged.
