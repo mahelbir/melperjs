@@ -14,6 +14,11 @@ npm i melperjs
 
 See the [docs folder](docs/README.md) for the full API reference.
 
+## Support
+
+If this project helps you, please consider giving it a [Star ⭐️](https://github.com/mahelbir/melperjs) on GitHub.
+This will encourage us to continue developing and maintaining this project.
+
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
