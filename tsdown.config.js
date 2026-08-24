@@ -1,10 +1,11 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-    entry: ["src/general.js", "src/node.js"],
+    entry: ["src/**/*.js"],
     format: ["esm", "cjs"],
     platform: "node",
     target: "node18",
     fixedExtension: true,
+    unbundle: true,
     clean: true,
 });

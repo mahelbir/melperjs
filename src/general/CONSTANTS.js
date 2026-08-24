@@ -1,0 +1,8 @@
+export const CONSTANTS = {
+    LOWER_CASE: "abcdefghijklmnopqrstuvwxyz",
+    UPPER_CASE: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    HEXADECIMAL: "0123456789abcdef",
+    NUMBERS: "0123456789",
+    INT32_MIN: -2147483648,
+    INT32_MAX: 2147483647
+};
