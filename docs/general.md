@@ -242,6 +242,16 @@ Builds a deterministic hex string of the requested length from a seed via `mulbe
   - `length` (Number): Output length in hex characters. Required.
 - **Returns:** Hex string.
 
+## Hashing
+
+### fnv1a(value)
+
+Hashes the UTF-8 bytes of a value with the 32-bit FNV-1a algorithm.
+
+- **Parameters:**
+  - `value` (Any): Value to hash. Non-strings go through `castString` first.
+- **Returns:** Base-36 string.
+
 ## Predicates
 
 ### checkEmpty(value)
@@ -331,6 +341,14 @@ Deep counterpart of `Object.freeze`: freezes a value and everything reachable fr
 - **Parameters:**
   - `value` (Any): Value to freeze. Primitives are returned untouched.
 - **Returns:** The same `value`.
+
+### unwrapDefault(value)
+
+Peels nested `default` properties off a value until one without `default` is left.
+
+- **Parameters:**
+  - `value` (Any): Value to unwrap. Non-objects come back untouched, and a circular `default` chain stops at the first repeated object.
+- **Returns:** The innermost value.
 
 ## Cookies
 

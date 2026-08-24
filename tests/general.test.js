@@ -25,6 +25,7 @@ import {
     shuffleObject,
     objectStringify,
     deepFreeze,
+    unwrapDefault,
     castString,
     limitString,
     safeString,
@@ -38,6 +39,7 @@ import {
     randomElement,
     mulberry32,
     seedHex,
+    fnv1a,
     cookiesFromResponse,
     cookiesToHeader,
     cookiesFromHeader,
@@ -495,6 +497,50 @@ describe("deepFreeze", () => {
 });
 
 
+describe("unwrapDefault", () => {
+    it("returns primitives and nullish values untouched", () => {
+        assert.equal(unwrapDefault(1), 1);
+        assert.equal(unwrapDefault("a"), "a");
+        assert.equal(unwrapDefault(null), null);
+        assert.equal(unwrapDefault(undefined), undefined);
+    });
+
+    it("returns an object that has no default as-is", () => {
+        const input = {a: 1};
+        assert.strictEqual(unwrapDefault(input), input);
+    });
+
+    it("peels a single and a nested default", () => {
+        const inner = {a: 1};
+        assert.strictEqual(unwrapDefault({default: inner}), inner);
+        assert.strictEqual(unwrapDefault({default: {default: {default: inner}}}), inner);
+    });
+
+    it("stops at a non-object default", () => {
+        assert.equal(unwrapDefault({default: {default: 42}}), 42);
+        assert.equal(unwrapDefault({default: null}), null);
+    });
+
+    it("unwraps a function export", () => {
+        const fn = () => 1;
+        assert.strictEqual(unwrapDefault({default: {default: fn}}), fn);
+    });
+
+    it("stops on a self-referencing default instead of looping forever", () => {
+        const mod = {};
+        mod.default = mod;
+        assert.strictEqual(unwrapDefault(mod), mod);
+    });
+
+    it("stops on a circular default chain instead of looping forever", () => {
+        const a = {}, b = {};
+        a.default = b;
+        b.default = a;
+        assert.strictEqual(unwrapDefault(a), a);
+    });
+});
+
+
 describe("castString", () => {
     it("returns empty string for null and undefined", () => {
         assert.equal(castString(null), "");
@@ -715,6 +761,35 @@ describe("seedHex", () => {
 
     it("produces different output for different seeds", () => {
         assert.notEqual(seedHex("a", 8), seedHex("b", 8));
+    });
+});
+
+
+describe("fnv1a", () => {
+    it("matches the published FNV-1a 32-bit vectors", () => {
+        assert.equal(parseInt(fnv1a(""), 36), 0x811c9dc5);
+        assert.equal(parseInt(fnv1a("a"), 36), 0xe40c292c);
+        assert.equal(parseInt(fnv1a("foobar"), 36), 0xbf9cf968);
+    });
+
+    it("hashes UTF-8 bytes rather than UTF-16 code units", () => {
+        assert.equal(parseInt(fnv1a("ğ"), 36), 1888488164);
+        assert.equal(parseInt(fnv1a("\u{1D11E}"), 36), 997838904);
+    });
+
+    it("is deterministic and separates near-identical inputs", () => {
+        assert.equal(fnv1a("melperjs"), fnv1a("melperjs"));
+        assert.notEqual(fnv1a("melperjs"), fnv1a("melperjt"));
+    });
+
+    it("routes non-string input through castString", () => {
+        assert.equal(fnv1a(123), fnv1a("123"));
+        assert.equal(fnv1a(null), fnv1a(""));
+        assert.equal(fnv1a({a: 1}), fnv1a('{"a":1}'));
+    });
+
+    it("returns a base-36 string", () => {
+        assert.match(fnv1a("melperjs"), /^[0-9a-z]+$/);
     });
 });
 

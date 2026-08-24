@@ -4,7 +4,14 @@ import {camelCase, upperFirst} from "es-toolkit/string";
 import {shuffle} from "es-toolkit/array";
 import isEmpty from "es-toolkit/compat/isEmpty";
 
-import {NUMBER_PATTERN, INTEGER_PATTERN, MUTATOR_METHODS} from "./helpers/general.js";
+import {
+    FNV_OFFSET_BASIS,
+    FNV_PRIME,
+    INTEGER_PATTERN,
+    MUTATOR_METHODS,
+    NUMBER_PATTERN,
+    TEXT_ENCODER
+} from "./helpers/general.js";
 
 
 export const CONSTANTS = {
@@ -237,6 +244,15 @@ export function seedHex(seed, length) {
     return result.slice(0, length);
 }
 
+export function fnv1a(value) {
+    let hash = FNV_OFFSET_BASIS;
+    for (const byte of TEXT_ENCODER.encode(castString(value))) {
+        hash ^= byte;
+        hash = Math.imul(hash, FNV_PRIME);
+    }
+    return (hash >>> 0).toString(36);
+}
+
 export function checkEmpty(value) {
     if (typeof value === "number") return value === 0;
     return isEmpty(value);
@@ -357,6 +373,16 @@ export function deepFreeze(value) {
     };
 
     return walk(value);
+}
+
+export function unwrapDefault(value) {
+    const seen = new WeakSet();
+    let current = value;
+    while (current && typeof current === "object" && "default" in current && !seen.has(current)) {
+        seen.add(current);
+        current = current.default;
+    }
+    return current;
 }
 
 export function cookiesFromResponse(response, decodeValues = false) {
