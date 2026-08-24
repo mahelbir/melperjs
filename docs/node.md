@@ -123,26 +123,27 @@ Decodes Base64 input to a string using the given output encoding.
 
 ## Bcrypt (Passwords)
 
-### bcryptHash(plainText, {key = "", strength = 12, preHash = true} = {})
+### bcryptHash(plainText, {key = "", preHash = true, strength = 12} = {})
 
 Hashes plaintext with bcrypt. An optional pre-hash `key` (application-wide secret, sometimes called "pepper") is appended to the plaintext before hashing. `strength` controls the bcrypt cost factor. When `preHash` is `true` (default), the input is SHA-256-hashed first so that very long passwords (bcrypt silently truncates at 72 bytes) are handled safely and uniquely.
 
 - **Parameters:**
     - `plainText` (String): Password or other secret to hash.
     - `options.key` (String): Extra secret appended before hashing. Default `""`.
-    - `options.strength` (Number): bcrypt cost (rounds). Default `12`.
     - `options.preHash` (Boolean): Pre-hash with SHA-256 before bcrypt. Default `true`. Disable only for back-compat with hashes generated without it.
+  - `options.strength` (Number): bcrypt cost (rounds). Default `12`.
 - **Returns:** Bcrypt hash string.
 
-### bcryptVerify(plainText, hash, {key = "", preHash = true} = {})
+### bcryptVerify(plainText, hash, {key = "", preHash = true, dummy = false} = {})
 
 Verifies that `plainText` (with the same `key`) matches a previously generated bcrypt hash. `preHash` must match the value used during hashing.
 
 - **Parameters:**
     - `plainText` (String): Plaintext to verify.
-    - `hash` (String): Bcrypt hash from `bcryptHash`.
+    - `hash` (String): Bcrypt hash from `bcryptHash`. Nullish or empty input throws unless `dummy` is set.
     - `options.key` (String): Same `key` used during hashing.
     - `options.preHash` (Boolean): Must match the `preHash` used for `bcryptHash`. Default `true`.
+    - `options.dummy` (Boolean|Number): Burns one throwaway bcrypt hash and returns `false` when `hash` is missing, so the call costs the same as a real check. `true` uses the default `strength`, a number uses that cost factor — match whatever your stored hashes use. Default `false`.
 - **Returns:** `Boolean` indicating match.
 
 ## File I/O (JSON)

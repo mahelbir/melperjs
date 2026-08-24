@@ -8,7 +8,7 @@ import {execFileSync} from "child_process";
 import bcrypt from "bcryptjs";
 
 import {CONSTANTS, checkEmpty} from "./general.js";
-import {bcryptInput, digest, execAsync, sleepBuffer} from "./helpers/node.js";
+import {BCRYPT_STRENGTH, bcryptInput, digest, execAsync, sleepBuffer} from "./helpers/node.js";
 
 export function secureRandomBoolean() {
     return secureRandomInteger(2) === 1;
@@ -93,12 +93,17 @@ export function base64Decode(data, encoding = 'utf8') {
     return Buffer.from(data, 'base64').toString(encoding);
 }
 
-export function bcryptHash(plainText, {key = "", strength = 12, preHash = true} = {}) {
+export function bcryptHash(plainText, {key = "", preHash = true, strength = BCRYPT_STRENGTH} = {}) {
     return bcrypt.hashSync(bcryptInput(plainText, key, preHash), strength);
 }
 
-export function bcryptVerify(plainText, hash, {key = "", preHash = true} = {}) {
-    return bcrypt.compareSync(bcryptInput(plainText, key, preHash), hash);
+export function bcryptVerify(plainText, hash, {key = "", preHash = true, dummy = false} = {}) {
+    const input = bcryptInput(plainText, key, preHash);
+    if (dummy && !hash) {
+        bcrypt.hashSync(input, typeof dummy === "number" ? dummy : BCRYPT_STRENGTH);
+        return false;
+    }
+    return bcrypt.compareSync(input, hash);
 }
 
 export async function readJsonFile(filePath, defaultValue = {}) {

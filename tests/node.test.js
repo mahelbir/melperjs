@@ -278,6 +278,34 @@ describe("bcryptHash / bcryptVerify", () => {
         // Mismatched preHash flag should not verify
         assert.equal(bcryptVerify("password", hashed, {key: "secret"}), false);
     });
+
+    it("throws on a missing hash when dummy is off", () => {
+        assert.throws(() => bcryptVerify("password", null));
+        assert.throws(() => bcryptVerify("password", undefined));
+    });
+
+    it("returns false instead of throwing when dummy is set", () => {
+        assert.equal(bcryptVerify("password", null, {dummy: 4}), false);
+        assert.equal(bcryptVerify("password", "", {dummy: 4}), false);
+    });
+
+    it("spends real bcrypt work on a missing hash so timing does not leak", () => {
+        const start = Date.now();
+        bcryptVerify("password", null, {dummy: true});
+        assert.ok(Date.now() - start > 20, "dummy path returned too fast");
+    });
+
+    it("treats a number as the dummy cost factor", () => {
+        const start = Date.now();
+        assert.equal(bcryptVerify("password", null, {dummy: 4}), false);
+        assert.ok(Date.now() - start < 100, "dummy ignored the requested cost factor");
+    });
+
+    it("ignores dummy when a real hash is given", () => {
+        const hashed = bcryptHash("password", {key: "secret", strength: 4});
+        assert.equal(bcryptVerify("password", hashed, {key: "secret", dummy: 4}), true);
+        assert.equal(bcryptVerify("wrong", hashed, {key: "secret", dummy: 4}), false);
+    });
 });
 
 
