@@ -3,16 +3,12 @@ import {promises as fsp} from "fs";
 import path from "path";
 import crypto from "crypto";
 import {networkInterfaces} from "os";
-import {exec, execFileSync} from "child_process";
-import {promisify} from "util";
+import {execFileSync} from "child_process";
 
 import bcrypt from "bcryptjs";
 
 import {CONSTANTS, checkEmpty} from "./general.js";
-
-
-const execAsync = promisify(exec);
-const sleepBuffer = new Int32Array(new SharedArrayBuffer(4));
+import {bcryptInput, digest, execAsync, sleepBuffer} from "./helpers/node.js";
 
 export function secureRandomBoolean() {
     return secureRandomInteger(2) === 1;
@@ -78,7 +74,7 @@ export function uuidFromSeed(seed, useDashes = true) {
 }
 
 export function hash(algorithm, data) {
-    return crypto.createHash(algorithm).update(data).digest("hex");
+    return digest(algorithm, data);
 }
 
 export function md5(data) {
@@ -98,19 +94,11 @@ export function base64Decode(data, encoding = 'utf8') {
 }
 
 export function bcryptHash(plainText, {key = "", strength = 12, preHash = true} = {}) {
-    let input = plainText + key;
-    if (preHash) {
-        input = sha256(input);
-    }
-    return bcrypt.hashSync(input, strength);
+    return bcrypt.hashSync(bcryptInput(plainText, key, preHash), strength);
 }
 
 export function bcryptVerify(plainText, hash, {key = "", preHash = true} = {}) {
-    let input = plainText + key;
-    if (preHash) {
-        input = sha256(input);
-    }
-    return bcrypt.compareSync(input, hash);
+    return bcrypt.compareSync(bcryptInput(plainText, key, preHash), hash);
 }
 
 export async function readJsonFile(filePath, defaultValue = {}) {

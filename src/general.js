@@ -4,6 +4,8 @@ import {camelCase, upperFirst} from "es-toolkit/string";
 import {shuffle} from "es-toolkit/array";
 import isEmpty from "es-toolkit/compat/isEmpty";
 
+import {NUMBER_PATTERN, INTEGER_PATTERN, MUTATOR_METHODS} from "./helpers/general.js";
+
 
 export const CONSTANTS = {
     LOWER_CASE: "abcdefghijklmnopqrstuvwxyz",
@@ -12,15 +14,6 @@ export const CONSTANTS = {
     NUMBERS: "0123456789",
     INT32_MIN: -2147483648,
     INT32_MAX: 2147483647
-};
-const NUMBER_PATTERN = /^-?\d+(\.\d+)?(e[+-]?\d+)?$/i;
-const INTEGER_PATTERN = /^-?\d+$/;
-const MUTATOR_METHODS = {
-    Map: ["set", "delete", "clear"],
-    Set: ["add", "delete", "clear"],
-    WeakMap: ["set", "delete"],
-    WeakSet: ["add", "delete"],
-    Date: Object.getOwnPropertyNames(Date.prototype).filter(key => key.startsWith("set"))
 };
 
 export function Exception(message, response = {}, name = null) {
