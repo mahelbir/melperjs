@@ -24,6 +24,7 @@ import {
     waitForProperty,
     shuffleObject,
     objectStringify,
+    deepFreeze,
     castString,
     limitString,
     safeString,
@@ -342,6 +343,154 @@ describe("objectStringify", () => {
         assert.equal(obj.a, "1");
         assert.equal(obj.b.c, "true");
         assert.equal(obj.b.d, "null");
+    });
+});
+
+
+describe("deepFreeze", () => {
+    it("returns primitives and nullish values untouched", () => {
+        assert.equal(deepFreeze(1), 1);
+        assert.equal(deepFreeze("a"), "a");
+        assert.equal(deepFreeze(null), null);
+        assert.equal(deepFreeze(undefined), undefined);
+    });
+
+    it("freezes nested objects and arrays, returning the same reference", () => {
+        const input = {a: {b: {c: 1}}, list: [{d: 2}, [3]]};
+        const result = deepFreeze(input);
+        assert.strictEqual(result, input);
+        assert.ok(Object.isFrozen(input));
+        assert.ok(Object.isFrozen(input.a.b));
+        assert.ok(Object.isFrozen(input.list));
+        assert.ok(Object.isFrozen(input.list[0]));
+        assert.ok(Object.isFrozen(input.list[1]));
+        assert.throws(() => {
+            input.a.b.c = 2;
+        }, TypeError);
+        assert.throws(() => input.list.push(4), TypeError);
+    });
+
+    it("freezes symbol keys, non-enumerable keys and class instances", () => {
+        const key = Symbol("nested");
+        class Holder {
+            constructor() {
+                this.inner = {x: 1};
+            }
+        }
+
+        const input = {[key]: {y: 1}, instance: new Holder()};
+        Object.defineProperty(input, "hidden", {value: {z: 1}, enumerable: false, writable: true});
+        deepFreeze(input);
+        assert.ok(Object.isFrozen(input[key]));
+        assert.ok(Object.isFrozen(input.hidden));
+        assert.ok(Object.isFrozen(input.instance.inner));
+    });
+
+    it("handles cycles without recursing forever", () => {
+        const input = {name: "root"};
+        input.self = input;
+        input.child = {parent: input};
+        deepFreeze(input);
+        assert.ok(Object.isFrozen(input));
+        assert.ok(Object.isFrozen(input.child));
+    });
+
+    it("descends into an already frozen container", () => {
+        const child = {a: 1};
+        const input = Object.freeze({child});
+        deepFreeze(input);
+        assert.ok(Object.isFrozen(child));
+    });
+
+    it("does not invoke getters", () => {
+        let calls = 0;
+        const input = {
+            get lazy() {
+                calls++;
+                return {a: 1};
+            }
+        };
+        deepFreeze(input);
+        assert.equal(calls, 0);
+        assert.ok(Object.isFrozen(input));
+    });
+
+    it("freezes Map contents and blocks its mutators", () => {
+        const value = {a: 1};
+        const key = {k: 1};
+        const map = new Map([[key, value]]);
+        deepFreeze(map);
+        assert.ok(Object.isFrozen(map));
+        assert.ok(Object.isFrozen(key));
+        assert.ok(Object.isFrozen(value));
+        assert.throws(() => map.set("b", 2), TypeError);
+        assert.throws(() => map.delete(key), TypeError);
+        assert.throws(() => map.clear(), TypeError);
+        assert.equal(map.get(key), value);
+    });
+
+    it("freezes Set contents and blocks its mutators", () => {
+        const item = {a: 1};
+        const set = new Set([item]);
+        deepFreeze(set);
+        assert.ok(Object.isFrozen(item));
+        assert.throws(() => set.add(2), TypeError);
+        assert.throws(() => set.delete(item), TypeError);
+        assert.throws(() => set.clear(), TypeError);
+        assert.ok(set.has(item));
+    });
+
+    it("blocks WeakMap and WeakSet mutators", () => {
+        const weakMap = new WeakMap();
+        const weakSet = new WeakSet();
+        deepFreeze({weakMap, weakSet});
+        assert.throws(() => weakMap.set({}, 1), TypeError);
+        assert.throws(() => weakSet.add({}), TypeError);
+    });
+
+    it("blocks Date setters while keeping readers usable", () => {
+        const date = new Date(0);
+        deepFreeze(date);
+        assert.ok(Object.isFrozen(date));
+        assert.throws(() => date.setTime(1000), TypeError);
+        assert.throws(() => date.setFullYear(2000), TypeError);
+        assert.equal(date.getTime(), 0);
+    });
+
+    it("seals RegExp so global patterns keep working", () => {
+        const pattern = /a/g;
+        deepFreeze({pattern});
+        assert.equal(Object.isSealed(pattern), true);
+        assert.equal(pattern.test("aa"), true);
+        assert.equal(pattern.test("aa"), true);
+        assert.throws(() => {
+            pattern.extra = 1;
+        }, TypeError);
+    });
+
+    it("leaves typed arrays and DataView untouched", () => {
+        const typed = new Uint8Array([1, 2]);
+        const view = new DataView(new ArrayBuffer(2));
+        deepFreeze({typed, view});
+        assert.equal(Object.isFrozen(typed), false);
+        assert.equal(Object.isFrozen(view), false);
+        typed[0] = 9;
+        assert.equal(typed[0], 9);
+    });
+
+    it("freezes functions without touching their prototype", () => {
+        class Klass {
+        }
+
+        const fn = () => 1;
+        fn.meta = {a: 1};
+        deepFreeze({fn, Klass});
+        assert.ok(Object.isFrozen(fn));
+        assert.ok(Object.isFrozen(fn.meta));
+        assert.ok(Object.isFrozen(Klass));
+        assert.equal(Object.isFrozen(Klass.prototype), false);
+        Klass.prototype.added = () => 2;
+        assert.equal(new Klass().added(), 2);
     });
 });
 

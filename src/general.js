@@ -15,6 +15,13 @@ export const CONSTANTS = {
 };
 const NUMBER_PATTERN = /^-?\d+(\.\d+)?(e[+-]?\d+)?$/i;
 const INTEGER_PATTERN = /^-?\d+$/;
+const MUTATOR_METHODS = {
+    Map: ["set", "delete", "clear"],
+    Set: ["add", "delete", "clear"],
+    WeakMap: ["set", "delete"],
+    WeakSet: ["add", "delete"],
+    Date: Object.getOwnPropertyNames(Date.prototype).filter(key => key.startsWith("set"))
+};
 
 export function Exception(message, response = {}, name = null) {
     const error = new Error(message);
@@ -316,6 +323,47 @@ export function objectStringify(object) {
         }
     }
     return object;
+}
+
+export function deepFreeze(value) {
+    const seen = new WeakSet();
+    const blocked = () => {
+        throw new TypeError("Cannot mutate a frozen object");
+    };
+
+    const walk = (target) => {
+        if (target === null || (typeof target !== "object" && typeof target !== "function")) return target;
+        if (seen.has(target)) return target;
+        seen.add(target);
+        if (ArrayBuffer.isView(target)) return target;
+
+        const tag = Object.prototype.toString.call(target).slice(8, -1);
+
+        if (Object.isExtensible(target)) {
+            for (const method of MUTATOR_METHODS[tag] || []) {
+                if (typeof target[method] === "function") target[method] = blocked;
+            }
+        }
+
+        if (tag === "Map") {
+            for (const [key, item] of target) {
+                walk(key);
+                walk(item);
+            }
+        } else if (tag === "Set") {
+            for (const item of target) walk(item);
+        }
+
+        for (const key of Reflect.ownKeys(target)) {
+            if (typeof target === "function" && key === "prototype") continue;
+            const descriptor = Object.getOwnPropertyDescriptor(target, key);
+            if (descriptor && "value" in descriptor) walk(descriptor.value);
+        }
+
+        return tag === "RegExp" ? Object.seal(target) : Object.freeze(target);
+    };
+
+    return walk(value);
 }
 
 export function cookiesFromResponse(response, decodeValues = false) {

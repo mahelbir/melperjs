@@ -324,6 +324,14 @@ Recursively walks an object and converts every leaf value to `String(value)`. Ne
   - `object` (Object): Object to mutate.
 - **Returns:** The same `object`.
 
+### deepFreeze(value)
+
+Deep counterpart of `Object.freeze`: freezes a value and everything reachable from it, whatever the type. Mutates the input.
+
+- **Parameters:**
+  - `value` (Any): Value to freeze. Primitives are returned untouched.
+- **Returns:** The same `value`.
+
 ## Cookies
 
 ### cookiesFromResponse(response, decodeValues = false)
