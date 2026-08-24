@@ -45,12 +45,12 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "es-toolkit": "^1.49.0",
-    "set-cookie-parser": "^3.1.1",
+    "es-toolkit": "^1.51.0",
+    "set-cookie-parser": "^3.1.2",
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "tsdown": "^0.22.3"
+    "tsdown": "^0.22.14"
   },
   "publishConfig": {
     "access": "public"
