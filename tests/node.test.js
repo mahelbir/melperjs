@@ -30,7 +30,9 @@ import {
     readJsonFileSync,
     writeJsonFile,
     writeJsonFileSync,
-    clearDirectory
+    clearDirectory,
+    sleepMsSync,
+    sleepSync
 } from "../src/node.js";
 
 
@@ -335,5 +337,34 @@ describe("clearDirectory", () => {
         const dir = tmpPath("clean-create");
         await clearDirectory(dir, true);
         assert.ok(fs.existsSync(dir));
+    });
+});
+
+describe("sleepMsSync / sleepSync", () => {
+    it("sleepMsSync blocks for roughly the requested duration", () => {
+        const start = Date.now();
+        sleepMsSync(60);
+        const elapsed = Date.now() - start;
+        assert.ok(elapsed >= 55 && elapsed < 400, `elapsed ${elapsed}`);
+    });
+
+    it("sleepSync(seconds) delegates to sleepMsSync", () => {
+        const start = Date.now();
+        sleepSync(0.06);
+        const elapsed = Date.now() - start;
+        assert.ok(elapsed >= 55 && elapsed < 400, `elapsed ${elapsed}`);
+    });
+
+    it("blocks the event loop while waiting", () => {
+        let timerFired = false;
+        setTimeout(() => (timerFired = true), 0);
+        sleepMsSync(30);
+        assert.equal(timerFired, false);
+    });
+
+    it("returns immediately for zero, negative and non-numeric input", () => {
+        const start = Date.now();
+        for (const value of [0, -100, NaN, undefined, null, "abc"]) sleepMsSync(value);
+        assert.ok(Date.now() - start < 100);
     });
 });

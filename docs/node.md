@@ -182,7 +182,6 @@ Synchronous version of `writeJsonFile`.
 - **Parameters:**
     - `filePath` (String): Destination path.
     - `data` (Any): JSON-serializable value.
-- **Returns:** `undefined`.
 
 ## File System
 
@@ -195,7 +194,6 @@ directories are kept.
     - `mainDirectory` (String): Parent directory path.
     - `start` (Number): First subdirectory index. Default `0`.
     - `end` (Number): Last subdirectory index. Default `9`.
-- **Returns:** `undefined`.
 
 ### clearDirectory(directoryPath, keepDir = true)
 
@@ -231,3 +229,19 @@ and any address starting with `192.168.`. Falls back to `127.0.0.1` if none qual
 Builds a version string from the UTC timestamp of the latest git commit in the current working directory.
 
 - **Returns:** `YYMMDD.HHMM` string, or `"1.0"` when git is unavailable or the timestamp cannot be parsed.
+
+## Time & Async
+
+### sleepMsSync(milliseconds)
+
+Blocks the current thread for the given number of milliseconds via `Atomics.wait`. Prefer the async `sleepMs` unless a synchronous pause is required.
+
+- **Parameters:**
+    - `milliseconds` (Number): Delay in ms.
+
+### sleepSync(seconds)
+
+Same as `sleepMsSync` but the delay is given in seconds.
+
+- **Parameters:**
+    - `seconds` (Number): Delay in seconds.

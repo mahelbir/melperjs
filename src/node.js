@@ -12,6 +12,7 @@ import {CONSTANTS, checkEmpty} from "./general.js";
 
 
 const execAsync = promisify(exec);
+const sleepBuffer = new Int32Array(new SharedArrayBuffer(4));
 
 export function secureRandomBoolean() {
     return secureRandomInteger(2) === 1;
@@ -181,4 +182,12 @@ export function gitVersion() {
     } catch {
         return "1.0";
     }
+}
+
+export function sleepMsSync(milliseconds) {
+    Atomics.wait(sleepBuffer, 0, 0, Math.max(0, Number(milliseconds) || 0));
+}
+
+export function sleepSync(seconds) {
+    sleepMsSync(seconds * 1000);
 }
